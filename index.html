@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Admin/CS — Kubah Emas (Live)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --y:#F5C400;--y-dim:#C9A300;
+  --charcoal:#211F1D;--charcoal-2:#2C2A27;
+  --bg:#FFFFFF;--surface:#FBFAF8;--surface-2:#F4F2EE;
+  --text:#211F1D;--text-dim:#6B6660;--text-faint:#9A958D;
+  --border:rgba(33,31,29,0.10);--border-mid:rgba(33,31,29,0.16);
+  --ok:#1A7A46;--ok-bg:#E3F3E9;
+  --warn:#9A6B00;--warn-bg:#FFF3D6;
+  --bad:#B23A3A;--bad-bg:#FBE4E4;
+  --shadow:0 1px 3px rgba(33,31,29,.06), 0 8px 24px rgba(33,31,29,.04);
+}
+body.dark{
+  --bg:#1A1816;--surface:#211F1D;--surface-2:#2C2A27;
+  --text:#F5F3EF;--text-dim:#A8A39A;--text-faint:#76716A;
+  --border:rgba(255,255,255,.08);--border-mid:rgba(255,255,255,.14);
+  --ok-bg:rgba(26,122,70,.18);--warn-bg:rgba(154,107,0,.2);--bad-bg:rgba(178,58,58,.18);
+  --shadow:0 1px 3px rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.35);
+}
+body{background:var(--bg);color:var(--text);font-family:'Poppins',sans-serif;font-size:14px;line-height:1.55;transition:background .35s,color .35s;min-height:100vh}
+.wrap{max-width:1100px;margin:0 auto;padding:0 0 70px}
+
+.header{padding:28px 36px 18px;display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:13px}
+.brand-mark{width:44px;height:44px;background:var(--y);border-radius:13px;display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--charcoal);font-size:16px;letter-spacing:-.5px;flex-shrink:0}
+.brand-name{font-weight:700;font-size:17px;letter-spacing:-.2px}
+.brand-sub{font-size:11.5px;color:var(--text-dim)}
+.header-right{display:flex;align-items:center;gap:14px}
+.theme-toggle{width:52px;height:30px;border-radius:30px;background:var(--surface-2);border:1px solid var(--border-mid);cursor:pointer;position:relative;flex-shrink:0}
+.theme-toggle .knob{width:24px;height:24px;border-radius:50%;background:var(--y);position:absolute;top:2px;left:2px;transition:transform .3s cubic-bezier(.4,0,.2,1);display:flex;align-items:center;justify-content:center;font-size:12px}
+body.dark .theme-toggle .knob{transform:translateX(22px)}
+
+.page-title{padding:8px 36px 4px;font-size:24px;font-weight:600;letter-spacing:-.3px}
+.body-pad{padding:0 36px}
+
+/* PERIOD BAR */
+.period-bar{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  padding:14px 16px;margin:18px 0 22px;box-shadow:var(--shadow);
+}
+.period-bar label{font-size:11px;font-weight:600;color:var(--text-dim);margin-right:2px}
+select,input[type=date]{
+  font-family:'Poppins',sans-serif;font-size:12.5px;padding:8px 11px;border-radius:8px;
+  border:1px solid var(--border-mid);background:var(--surface-2);color:var(--text);outline:none;cursor:pointer;
+}
+select:focus,input[type=date]:focus{border-color:var(--y);box-shadow:0 0 0 3px rgba(245,196,0,.18)}
+.btn{
+  font-family:'Poppins',sans-serif;font-weight:600;font-size:12px;padding:8px 16px;border-radius:8px;
+  border:none;cursor:pointer;transition:opacity .15s,transform .15s;
+}
+.btn:hover{opacity:.85;transform:translateY(-1px)}
+.btn-y{background:var(--y);color:var(--charcoal)}
+.btn-ghost{background:var(--surface-2);color:var(--text);border:1px solid var(--border-mid)}
+#customRange{display:none;align-items:center;gap:8px}
+.period-meta{font-size:10.5px;color:var(--text-faint);margin-left:auto;text-align:right}
+.period-meta b{color:var(--text-dim)}
+.spin{display:inline-block;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* STATUS BANNERS */
+.status-banner{border-radius:12px;padding:14px 16px;margin-bottom:18px;font-size:12px;display:none;align-items:flex-start;gap:10px}
+.status-banner.show{display:flex}
+.status-loading{background:var(--surface-2);border:1px solid var(--border-mid);color:var(--text-dim)}
+.status-error{background:var(--bad-bg);border:1px solid rgba(178,58,58,.3);color:var(--bad)}
+.status-error b{display:block;margin-bottom:4px;color:var(--bad)}
+.status-error ul{margin:6px 0 0 16px;line-height:1.6}
+
+.section{margin-bottom:22px}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow);transition:transform .2s}
+.kpi-card:hover{transform:translateY(-2px)}
+.kpi-label{font-size:11px;font-weight:500;color:var(--text-dim);margin-bottom:9px}
+.kpi-val{font-size:26px;font-weight:700;letter-spacing:-.5px;line-height:1}
+.kpi-sub{font-size:11px;color:var(--text-faint);margin-top:7px}
+.kpi-badge{display:inline-block;font-size:9.5px;font-weight:700;padding:3px 9px;border-radius:20px;margin-top:9px;letter-spacing:.2px}
+.badge-ok{background:var(--ok-bg);color:var(--ok)}
+.badge-warn{background:var(--warn-bg);color:var(--warn)}
+.badge-bad{background:var(--bad-bg);color:var(--bad)}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px 24px;box-shadow:var(--shadow)}
+.card-title{font-size:14.5px;font-weight:600;margin-bottom:3px}
+.card-desc{font-size:11.5px;color:var(--text-dim);margin-bottom:16px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+
+.alert-card{background:linear-gradient(135deg,var(--charcoal),var(--charcoal-2));border:1px solid rgba(245,196,0,.25);border-radius:14px;padding:22px 24px;display:flex;align-items:center;gap:18px;box-shadow:var(--shadow)}
+.alert-icon{width:50px;height:50px;border-radius:50%;background:rgba(245,196,0,.12);border:1px solid rgba(245,196,0,.35);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.alert-num{font-size:28px;font-weight:700;color:var(--y)}
+.alert-text{font-size:11.5px;color:rgba(255,255,255,.65);margin-top:4px;max-width:560px}
+.alert-text b{color:#fff;font-weight:600}
+.alert-card.ok-state{background:linear-gradient(135deg,#1A2E22,#21372A);border-color:rgba(26,122,70,.35)}
+.alert-card.ok-state .alert-num{color:#5FCB8B}
+.alert-card.ok-state .alert-icon{background:rgba(26,122,70,.15);border-color:rgba(26,122,70,.4)}
+
+.heatmap-row{display:flex;gap:6px;flex-wrap:wrap}
+.heat-cell{flex:1;min-width:58px;text-align:center;border-radius:10px;padding:11px 4px}
+.heat-date{font-size:9.5px;font-weight:600;opacity:.8}
+.heat-pct{font-size:14px;font-weight:700;margin-top:3px}
+.heat-100{background:var(--ok-bg);color:var(--ok)}
+.heat-mid{background:var(--warn-bg);color:var(--warn)}
+.heat-low{background:var(--bad-bg);color:var(--bad)}
+
+.chart-box{position:relative;width:100%}
+.chart-box.h220{height:220px}
+.chart-box.h200{height:200px}
+
+.footer-note{text-align:center;color:var(--text-faint);font-size:10.5px;padding:30px 0 0}
+.empty-note{font-size:12px;color:var(--text-faint);font-style:italic}
+
+@media (max-width:760px){
+  .kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .grid-2{grid-template-columns:1fr}
+  .header,.body-pad,.page-title{padding-left:18px;padding-right:18px}
+  .period-meta{margin-left:0;text-align:left;width:100%}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div class="brand">
+      <div class="brand-mark">KE</div>
+      <div>
+        <div class="brand-name">Kubah Emas</div>
+        <div class="brand-sub">Baja Ringan &amp; Plafon PVC</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle" id="themeToggle" onclick="toggleTheme()"><div class="knob" id="themeKnob">☀</div></div>
+    </div>
+  </div>
+
+  <div class="page-title">Dashboard Admin / CS</div>
+
+  <div class="body-pad">
+
+    <!-- PERIOD CONTROL -->
+    <div class="period-bar">
+      <label>Periode</label>
+      <select id="periodSelect" onchange="onPeriodChange()">
+        <option value="7">7 Hari Terakhir</option>
+        <option value="14" selected>14 Hari Terakhir</option>
+        <option value="30">30 Hari Terakhir</option>
+        <option value="all">Semua Data</option>
+        <option value="custom">Custom Tanggal...</option>
+      </select>
+      <div id="customRange">
+        <input type="date" id="dateFrom">
+        <span style="color:var(--text-faint);font-size:11px">s/d</span>
+        <input type="date" id="dateTo">
+        <button class="btn btn-y" onclick="applyCustomRange()">Terapkan</button>
+      </div>
+      <button class="btn btn-ghost" id="refreshBtn" onclick="loadData(true)">⟳ Muat Ulang Data</button>
+      <div class="period-meta" id="periodMeta">Memuat data...</div>
+    </div>
+
+    <div class="status-banner status-loading" id="loadingBanner">
+      <span class="spin">⟳</span> <span>Mengambil data dari Google Sheets...</span>
+    </div>
+
+    <div class="status-banner status-error" id="errorBanner">
+      <span>⚠</span>
+      <div>
+        <b>Gagal mengambil data dari Google Drive</b>
+        <span id="errorMsg">Koneksi gagal.</span>
+        <ul>
+          <li>Pastikan Sheet masih di-share minimal <b>"Anyone with the link — Viewer"</b>.</li>
+          <li>Pastikan nama tab di Sheet masih persis <b>"Log Aktivitas"</b> dan <b>"Ringkasan Harian"</b> (huruf besar/kecil & spasi berpengaruh).</li>
+          <li>Kalau baru saja ganti permission, tunggu 1-2 menit — kadang ada delay propagasi dari sisi Google.</li>
+          <li>Cek koneksi internet, lalu klik tombol di bawah untuk coba lagi.</li>
+        </ul>
+        <button class="btn btn-y" style="margin-top:10px" onclick="loadData(true)">Coba Lagi</button>
+      </div>
+    </div>
+
+    <div id="dashContent" style="display:none">
+
+      <!-- KPI ROW -->
+      <div class="section">
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-label">Total Leads Baru</div>
+            <div class="kpi-val" id="k-lead">—</div>
+            <div class="kpi-sub" id="k-lead-sub">selama periode terpilih</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Respons Rate</div>
+            <div class="kpi-val" id="k-resp">—</div>
+            <div class="kpi-sub" id="k-resp-sub">—</div>
+            <span class="kpi-badge" id="k-resp-badge"></span>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Leads Bermasalah</div>
+            <div class="kpi-val" id="k-bm">—</div>
+            <div class="kpi-sub" id="k-bm-sub">—</div>
+            <span class="kpi-badge" id="k-bm-badge"></span>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">FU Review Google</div>
+            <div class="kpi-val" id="k-fur">—</div>
+            <div class="kpi-sub">total follow-up review periode ini</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FU TUKANG -->
+      <div class="section">
+        <div class="alert-card" id="alertTukang">
+          <div class="alert-icon" id="alertTukangIcon">🛑</div>
+          <div>
+            <div class="alert-num" id="alertTukangNum">0 Follow Up Tukang</div>
+            <div class="alert-text" id="alertTukangText"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHAT MASUK -->
+      <div class="section">
+        <div class="card">
+          <div class="card-title">Chat Masuk</div>
+          <div class="card-desc">Tren harian selama periode terpilih</div>
+          <div style="display:flex;gap:28px;margin-bottom:16px;flex-wrap:wrap">
+            <div>
+              <div class="kpi-label" style="margin-bottom:4px">Jumlah Chat Masuk</div>
+              <div class="kpi-val" style="font-size:24px" id="k-chat-total">—</div>
+            </div>
+            <div>
+              <div class="kpi-label" style="margin-bottom:4px">Rata-rata / Hari</div>
+              <div class="kpi-val" style="font-size:24px" id="k-chat-avg">—</div>
+            </div>
+          </div>
+          <div class="chart-box h220"><canvas id="chatChart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- CHECKLIST & KATEGORI -->
+      <div class="section">
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title">Kepatuhan Checklist Harian</div>
+            <div class="card-desc">10 tugas standar per hari — rata-rata <b id="k-chk-avg" style="color:var(--text)">—</b></div>
+            <div class="heatmap-row" id="heatmapRow"></div>
+          </div>
+          <div class="card">
+            <div class="card-title">Kategori Leads Bermasalah</div>
+            <div class="card-desc">Frekuensi disebut di catatan harian, periode terpilih</div>
+            <div class="chart-box h200"><canvas id="problemChart"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CATATAN UMUM -->
+      <div class="section">
+        <div class="card">
+          <div class="card-title">Catatan Umum</div>
+          <div class="card-desc">Rangkuman otomatis dari catatan harian admin, periode terpilih</div>
+          <p style="font-size:12.5px;line-height:1.75" id="catatanUmum"></p>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <p class="footer-note" id="footerNote">Dashboard Admin/CS — Kubah Emas &bull; Live dari Google Sheets "CS Toko v2"</p>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+/* ============== KONFIGURASI ==============
+   Ganti SPREADSHEET_ID kalau mau pakai sheet lain.
+   Sheet WAJIB di-share "Anyone with the link — Viewer" karena
+   file ini fetch CSV langsung dari browser, tanpa login/API key.
+============================================= */
+const SPREADSHEET_ID='1Z3kXM4e4Ic6YUhhYzB3mrlSwXAbrYqJedgNDsbNtmuk';
+const SHEET_LOG='Log Aktivitas';
+const SHEET_SUMMARY='Ringkasan Harian';
+
+let summaryRows=[],logNotes=[],chatChart=null,problemChart=null;
+
+/* ---------- FETCH VIA JSONP (gviz CSV export tidak kirim header CORS,
+   jadi fetch() biasa akan selalu gagal walau sheet sudah public.
+   JSONP pakai <script> tag, yang tidak tunduk pada aturan CORS) ---------- */
+function fetchSheetJSONP(sheetName){
+  return new Promise((resolve,reject)=>{
+    const cbName='gvizCb_'+Math.random().toString(36).slice(2);
+    const timeout=setTimeout(()=>{cleanup();reject(new Error(`Timeout mengambil sheet "${sheetName}" (>10 detik). Cek nama tab & koneksi.`));},10000);
+    function cleanup(){
+      clearTimeout(timeout);
+      delete window[cbName];
+      if(script.parentNode) script.parentNode.removeChild(script);
+    }
+    window[cbName]=function(resp){
+      cleanup();
+      if(!resp || resp.status==='error'){
+        const msg=(resp&&resp.errors&&resp.errors[0]&&resp.errors[0].detailed_message)||'Sheet tidak ditemukan atau nama tab salah.';
+        reject(new Error(`Sheet "${sheetName}": ${msg}`));
+        return;
+      }
+      resolve(gvizTableToRows(resp.table));
+    };
+    const script=document.createElement('script');
+    script.src=`https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json;responseHandler:${cbName}&sheet=${encodeURIComponent(sheetName)}`;
+    script.onerror=()=>{cleanup();reject(new Error(`Gagal load sheet "${sheetName}" — cek nama tab masih sama & sharing masih "Anyone with the link".`));};
+    document.head.appendChild(script);
+  });
+}
+function gvizTableToRows(table){
+  if(!table||!table.cols) return [];
+  const headers=table.cols.map(c=>c.label||c.id||'');
+  const dataRows=(table.rows||[]).map(r=>(r.c||[]).map(cell=>{
+    if(!cell) return '';
+    if(cell.f!==undefined && cell.f!==null) return String(cell.f);
+    if(cell.v!==undefined && cell.v!==null) return String(cell.v);
+    return '';
+  }));
+  return [headers,...dataRows];
+}
+function colIdx(headers,...kws){
+  const lower=headers.map(h=>(h||'').toLowerCase().trim());
+  for(const kw of kws){const idx=lower.findIndex(h=>h.includes(kw));if(idx>=0)return idx;}
+  return -1;
+}
+function parseDateFlex(s){
+  if(!s)return null; s=s.trim();
+  let m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if(m)return new Date(+m[1],+m[2]-1,+m[3]);
+  m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if(m)return new Date(+m[3],+m[2]-1,+m[1]);
+  m=s.match(/Date\((\d+),(\d+),(\d+)\)/);
+  if(m)return new Date(+m[1],+m[2],+m[3]);
+  return null;
+}
+function num(s){ if(s===undefined||s===null)return 0; const c=String(s).replace(/[^\d.-]/g,''); const n=parseFloat(c); return isNaN(n)?0:n; }
+function dkey(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function dlabel(d){ return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0'); }
+
+/* ---------- FETCH & PARSE SHEETS ---------- */
+async function loadData(manual){
+  document.getElementById('dashContent').style.display='none';
+  document.getElementById('errorBanner').classList.remove('show');
+  document.getElementById('loadingBanner').classList.add('show');
+  const btn=document.getElementById('refreshBtn');
+  btn.disabled=true;
+
+  try{
+    const [logRows,sumRows]=await Promise.all([fetchSheetJSONP(SHEET_LOG),fetchSheetJSONP(SHEET_SUMMARY)]);
+
+    // ---- Parse Ringkasan Harian ----
+    const sh=sumRows[0];
+    const iDate=colIdx(sh,'tanggal'), iChat=colIdx(sh,'total chat'), iJwb=colIdx(sh,'chat terjawab'),
+          iLead=colIdx(sh,'leads baru'), iFur=colIdx(sh,'fu review'), iFut=colIdx(sh,'fu tukang'),
+          iBm=colIdx(sh,'leads bermasalah','bermasalah'), iChk=colIdx(sh,'checklist');
+    summaryRows=sumRows.slice(1).map(r=>{
+      const d=parseDateFlex(r[iDate]);
+      if(!d) return null;
+      return{date:d,key:dkey(d),label:dlabel(d),
+        chat:num(r[iChat]),jwb:num(r[iJwb]),lead:num(r[iLead]),
+        fur:num(r[iFur]),fut:num(r[iFut]),bm:num(r[iBm]),chk:num(r[iChk])};
+    }).filter(Boolean).sort((a,b)=>a.date-b.date);
+
+    // ---- Parse Log Aktivitas (ambil baris dengan catatan saja) ----
+    const lh=logRows[0];
+    const jDate=colIdx(lh,'tanggal'), jCatatan=colIdx(lh,'catatan');
+    logNotes=logRows.slice(1).map(r=>{
+      const d=parseDateFlex(r[jDate]); const note=(r[jCatatan]||'').trim();
+      if(!d||!note) return null;
+      return{date:d,key:dkey(d),note};
+    }).filter(Boolean);
+
+    if(summaryRows.length===0) throw new Error('Data "Ringkasan Harian" kosong atau format kolom tidak terbaca.');
+
+    document.getElementById('loadingBanner').classList.remove('show');
+    document.getElementById('dashContent').style.display='block';
+    document.getElementById('footerNote').textContent=
+      'Dashboard Admin/CS — Kubah Emas • Live dari Google Sheets "CS Toko v2" • Terakhir dimuat: '+new Date().toLocaleTimeString('id-ID');
+
+    setDefaultDateInputs();
+    applyPeriod();
+
+  }catch(err){
+    document.getElementById('loadingBanner').classList.remove('show');
+    document.getElementById('errorMsg').textContent=err.message||'Koneksi ke Google Drive gagal.';
+    document.getElementById('errorBanner').classList.add('show');
+  }
+  btn.disabled=false;
+}
+
+/* ---------- PERIOD FILTER ---------- */
+function setDefaultDateInputs(){
+  if(!summaryRows.length)return;
+  const min=summaryRows[0].date, max=summaryRows[summaryRows.length-1].date;
+  document.getElementById('dateFrom').value=dkey(min);
+  document.getElementById('dateTo').value=dkey(max);
+}
+function onPeriodChange(){
+  const v=document.getElementById('periodSelect').value;
+  document.getElementById('customRange').style.display=(v==='custom')?'flex':'none';
+  if(v!=='custom') applyPeriod();
+}
+function applyCustomRange(){ applyPeriod(); }
+
+function applyPeriod(){
+  if(!summaryRows.length)return;
+  const v=document.getElementById('periodSelect').value;
+  const maxDate=summaryRows[summaryRows.length-1].date;
+  let from,to;
+  if(v==='all'){ from=summaryRows[0].date; to=maxDate; }
+  else if(v==='custom'){
+    from=new Date(document.getElementById('dateFrom').value+'T00:00:00');
+    to=new Date(document.getElementById('dateTo').value+'T00:00:00');
+  } else {
+    const days=parseInt(v,10);
+    to=maxDate; from=new Date(maxDate); from.setDate(from.getDate()-(days-1));
+  }
+  const filteredSummary=summaryRows.filter(r=>r.date>=from && r.date<=to);
+  const filteredNotes=logNotes.filter(r=>r.date>=from && r.date<=to);
+
+  document.getElementById('periodMeta').innerHTML=
+    `Menampilkan <b>${filteredSummary.length} hari tercatat</b> &nbsp;(${dlabel(from)} — ${dlabel(to)})`;
+
+  render(filteredSummary,filteredNotes);
+}
+
+/* ---------- RENDER ---------- */
+function render(rows,notes){
+  if(!rows.length){
+    document.getElementById('k-lead').textContent='0';
+    ['k-resp','k-bm','k-fur','k-chat-total','k-chat-avg','k-chk-avg'].forEach(id=>document.getElementById(id).textContent='—');
+    document.getElementById('catatanUmum').innerHTML='<span class="empty-note">Tidak ada data untuk periode ini.</span>';
+    return;
+  }
+  const sum=(k)=>rows.reduce((a,r)=>a+r[k],0);
+  const totalLead=sum('lead'), totalChat=sum('chat'), totalJwb=sum('jwb'),
+        totalBm=sum('bm'), totalFur=sum('fur'), totalFut=sum('fut');
+  const respRate=totalChat>0?(totalJwb/totalChat*100):0;
+  const bmRate=totalLead>0?(totalBm/totalLead*100):0;
+  const chkAvg=rows.reduce((a,r)=>a+r.chk,0)/rows.length;
+  const chatAvg=totalChat/rows.length;
+
+  document.getElementById('k-lead').textContent=totalLead;
+  document.getElementById('k-resp').textContent=respRate.toFixed(1)+'%';
+  document.getElementById('k-resp-sub').textContent=`${totalJwb} dari ${totalChat} chat terjawab`;
+  setBadge('k-resp-badge',respRate>=90?['Sehat','ok']:respRate>=75?['Perlu Diperhatikan','warn']:['Rendah','bad']);
+
+  document.getElementById('k-bm').textContent=totalBm;
+  document.getElementById('k-bm-sub').textContent=bmRate.toFixed(1)+'% dari total leads baru';
+  setBadge('k-bm-badge',bmRate<=15?['Wajar','ok']:bmRate<=30?['Perlu Ditelusuri','warn']:['Tinggi','bad']);
+
+  document.getElementById('k-fur').textContent=totalFur;
+  document.getElementById('k-chat-total').textContent=totalChat;
+  document.getElementById('k-chat-avg').textContent=Math.round(chatAvg);
+  document.getElementById('k-chk-avg').textContent=chkAvg.toFixed(0)+'%';
+
+  // FU Tukang alert
+  const tEl=document.getElementById('alertTukang');
+  const tIcon=document.getElementById('alertTukangIcon');
+  const tNum=document.getElementById('alertTukangNum');
+  const tText=document.getElementById('alertTukangText');
+  if(totalFut===0){
+    tEl.classList.remove('ok-state'); tIcon.textContent='🛑';
+    tNum.textContent='0 Follow Up Tukang';
+    tText.innerHTML='Tercatat <b>nol selama periode terpilih</b>. Channel ini perlu ditelusuri penyebabnya.';
+  }else{
+    tEl.classList.add('ok-state'); tIcon.textContent='✓';
+    tNum.textContent=totalFut+' Follow Up Tukang';
+    tText.innerHTML='Ada aktivitas follow-up tukang pada periode ini — pertahankan ritmenya.';
+  }
+
+  // Heatmap
+  document.getElementById('heatmapRow').innerHTML=rows.map(r=>{
+    const cls=r.chk===100?'heat-100':(r.chk>=60?'heat-mid':'heat-low');
+    return `<div class="heat-cell ${cls}"><div class="heat-date">${r.label}</div><div class="heat-pct">${r.chk}%</div></div>`;
+  }).join('');
+
+  // Kategori Leads Bermasalah (keyword scan dari catatan)
+  const cats=[
+    {label:'Lokasi Jauh',kw:['lokasi jauh']},
+    {label:'Spam Chat',kw:['spam']},
+    {label:'Chat Kosong',kw:['kosong']},
+    {label:'No Respon',kw:['no respon']},
+    {label:'Pindah Pasang',kw:['pindah pasang']},
+    {label:'Diluar Produk',kw:['diluar produk']},
+  ];
+  const counts=cats.map(c=>notes.filter(n=>{
+    const t=n.note.toLowerCase();
+    return c.kw.some(k=>t.includes(k));
+  }).length);
+
+  // Catatan Umum — rangkuman otomatis
+  const sorted=cats.map((c,i)=>({label:c.label,count:counts[i]})).filter(c=>c.count>0).sort((a,b)=>b.count-a.count);
+  const topCats=sorted.slice(0,3).map(c=>c.label).join(', ')||'tidak ada catatan masalah spesifik';
+  const lowChkDays=rows.filter(r=>r.chk<100);
+  const dupCheck={}; rows.forEach(r=>{dupCheck[r.key]=(dupCheck[r.key]||0)+1});
+  const dupDates=Object.keys(dupCheck).filter(k=>dupCheck[k]>1);
+
+  let para=`Selama periode ${dlabel(rows[0].date)}–${dlabel(rows[rows.length-1].date)}, masalah yang paling sering disebut di catatan harian adalah <b>${topCats}</b>. `;
+  para+= totalFut===0
+    ? `Tidak ada satupun follow-up tukang yang tercatat pada periode ini — channel akuisisi prioritas utama perlu ditelusuri. `
+    : `Follow-up tukang tercatat ${totalFut} aktivitas pada periode ini. `;
+  para+= lowChkDays.length>0
+    ? `Ada ${lowChkDays.length} hari dengan checklist tugas belum 100% selesai (${lowChkDays.map(r=>r.label).join(', ')}). `
+    : `Checklist tugas harian selesai 100% di seluruh hari pada periode ini. `;
+  para+= dupDates.length>0
+    ? `Terdeteksi ${dupDates.length} tanggal dengan lebih dari satu entry rekap (kemungkinan input ganda) — perlu dicek manual.`
+    : `Tidak terdeteksi entry ganda pada periode ini.`;
+  document.getElementById('catatanUmum').innerHTML=para;
+
+  buildCharts(rows,cats.map(c=>c.label),counts);
+}
+
+function setBadge(id,[label,kind]){
+  const el=document.getElementById(id);
+  el.textContent=label;
+  el.className='kpi-badge badge-'+kind;
+}
+
+function chartColors(){
+  const dark=document.body.classList.contains('dark');
+  return{grid:dark?'rgba(255,255,255,.06)':'rgba(33,31,29,.05)',text:dark?'#A8A39A':'#6B6660',line:'#F5C400',fill:dark?'rgba(245,196,0,.10)':'rgba(245,196,0,.14)'};
+}
+function buildCharts(rows,catLabels,catCounts){
+  const c=chartColors();
+  if(chatChart)chatChart.destroy();
+  if(problemChart)problemChart.destroy();
+
+  chatChart=new Chart(document.getElementById('chatChart'),{
+    type:'line',
+    data:{labels:rows.map(r=>r.label),datasets:[{label:'Chat Masuk',data:rows.map(r=>r.chat),
+      borderColor:c.line,backgroundColor:c.fill,borderWidth:2.5,pointRadius:4,pointBackgroundColor:c.line,tension:.35,fill:true}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{grid:{display:false},ticks:{font:{size:10.5,family:'Poppins'},color:c.text}},
+              y:{grid:{color:c.grid},ticks:{font:{size:10.5,family:'Poppins'},color:c.text}}}}
+  });
+
+  problemChart=new Chart(document.getElementById('problemChart'),{
+    type:'bar',
+    data:{labels:catLabels,datasets:[{data:catCounts,backgroundColor:c.line,borderRadius:5,barThickness:14}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{grid:{color:c.grid},ticks:{font:{size:10,family:'Poppins'},color:c.text,stepSize:1}},
+              y:{grid:{display:false},ticks:{font:{size:10.5,family:'Poppins'},color:c.text}}}}
+  });
+}
+
+function toggleTheme(){
+  document.body.classList.toggle('dark');
+  document.getElementById('themeKnob').textContent=document.body.classList.contains('dark')?'☾':'☀';
+  if(summaryRows.length) applyPeriod();
+}
+
+loadData(false);
+</script>
+</body>
+</html>
