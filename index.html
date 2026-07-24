@@ -4,6 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard Admin/CS — Kubah Emas (Live)</title>
+<meta name="theme-color" content="#F5C400">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CS Toko">
+<meta name="application-name" content="CS Toko">
+<meta name="description" content="Dashboard Admin/CS Kubah Emas (Live)">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-512.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -558,6 +568,15 @@ function toggleTheme(){
   document.body.classList.toggle('dark');
   document.getElementById('themeKnob').textContent=document.body.classList.contains('dark')?'☾':'☀';
   if(summaryRows.length) applyPeriod();
+}
+
+// ── SERVICE WORKER (file statis sw.js) ─────────────
+if('serviceWorker' in navigator){
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('./sw.js')
+      .then(function(r){console.log('[SW] OK:',r.scope);})
+      .catch(function(e){console.warn('[SW] err:',e);});
+  });
 }
 
 loadData(false);
