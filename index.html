@@ -87,7 +87,7 @@ select:focus,input[type=date]:focus{border-color:var(--y);box-shadow:0 0 0 3px r
 .status-error ul{margin:6px 0 0 16px;line-height:1.6}
 
 .section{margin-bottom:22px}
-.kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.kpi-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 .kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow);transition:transform .2s}
 .kpi-card:hover{transform:translateY(-2px)}
 .kpi-label{font-size:11px;font-weight:500;color:var(--text-dim);margin-bottom:9px}
@@ -101,6 +101,20 @@ select:focus,input[type=date]:focus{border-color:var(--y);box-shadow:0 0 0 3px r
 .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px 24px;box-shadow:var(--shadow)}
 .card-title{font-size:14.5px;font-weight:600;margin-bottom:3px}
 .card-desc{font-size:11.5px;color:var(--text-dim);margin-bottom:16px}
+
+.alamat-row{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--border)}
+.alamat-row:last-child{border-bottom:none}
+.alamat-name{flex:1;font-size:12.5px;color:var(--text);font-weight:500}
+.alamat-bar-wrap{flex:2;height:8px;background:var(--surface-2);border-radius:6px;overflow:hidden}
+.alamat-bar{height:100%;background:var(--y);border-radius:6px}
+.alamat-count{width:34px;text-align:right;font-size:12.5px;font-weight:700;color:var(--text)}
+.alamat-empty{font-size:11.5px;color:var(--text-dim);padding:8px 0}
+
+.catatan-list{max-height:280px;overflow-y:auto;margin-top:6px}
+.catatan-row{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);font-size:12px}
+.catatan-row:last-child{border-bottom:none}
+.catatan-date{flex-shrink:0;width:56px;color:var(--text-dim);font-weight:600}
+.catatan-text{color:var(--text);line-height:1.5}
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 
 .alert-card{background:linear-gradient(135deg,var(--charcoal),var(--charcoal-2));border:1px solid rgba(245,196,0,.25);border-radius:14px;padding:22px 24px;display:flex;align-items:center;gap:18px;box-shadow:var(--shadow)}
@@ -162,6 +176,7 @@ select:focus,input[type=date]:focus{border-color:var(--y);box-shadow:0 0 0 3px r
         <option value="7">7 Hari Terakhir</option>
         <option value="14" selected>14 Hari Terakhir</option>
         <option value="30">30 Hari Terakhir</option>
+        <option value="month">Bulan Ini</option>
         <option value="all">Semua Data</option>
         <option value="custom">Custom Tanggal...</option>
       </select>
@@ -186,7 +201,7 @@ select:focus,input[type=date]:focus{border-color:var(--y);box-shadow:0 0 0 3px r
         <span id="errorMsg">Koneksi gagal.</span>
         <ul>
           <li>Pastikan Sheet masih di-share minimal <b>"Anyone with the link — Viewer"</b>.</li>
-          <li>Pastikan nama tab di Sheet masih persis <b>"Log Aktivitas"</b> dan <b>"Ringkasan Harian"</b> (huruf besar/kecil & spasi berpengaruh).</li>
+          <li>Pastikan nama tab di Sheet masih persis <b>"Log Aktivitas"</b>, <b>"Ringkasan Harian"</b>, dan tab <b>"Database TDK"</b> di spreadsheet leads (huruf besar/kecil & spasi berpengaruh).</li>
           <li>Kalau baru saja ganti permission, tunggu 1-2 menit — kadang ada delay propagasi dari sisi Google.</li>
           <li>Cek koneksi internet, lalu klik tombol di bawah untuk coba lagi.</li>
         </ul>
@@ -205,21 +220,30 @@ select:focus,input[type=date]:focus{border-color:var(--y);box-shadow:0 0 0 3px r
             <div class="kpi-sub" id="k-lead-sub">selama periode terpilih</div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-label">Respons Rate</div>
-            <div class="kpi-val" id="k-resp">—</div>
-            <div class="kpi-sub" id="k-resp-sub">—</div>
-            <span class="kpi-badge" id="k-resp-badge"></span>
+            <div class="kpi-label">Arsip</div>
+            <div class="kpi-val" id="k-arsip">—</div>
+            <div class="kpi-sub">leads tidak lanjut &gt; H+7</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Beli</div>
+            <div class="kpi-val" id="k-beli">—</div>
+            <div class="kpi-sub">leads berlabel "BELI"</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Follow Up</div>
+            <div class="kpi-val" id="k-fu">—</div>
+            <div class="kpi-sub" id="k-fu-sub">FU 1 + FU 2 + FU 3</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">FU Review Google</div>
+            <div class="kpi-val" id="k-fur">—</div>
+            <div class="kpi-sub">total follow-up review periode ini</div>
           </div>
           <div class="kpi-card">
             <div class="kpi-label">Leads Bermasalah</div>
             <div class="kpi-val" id="k-bm">—</div>
             <div class="kpi-sub" id="k-bm-sub">—</div>
             <span class="kpi-badge" id="k-bm-badge"></span>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-label">FU Review Google</div>
-            <div class="kpi-val" id="k-fur">—</div>
-            <div class="kpi-sub">total follow-up review periode ini</div>
           </div>
         </div>
       </div>
@@ -232,6 +256,20 @@ select:focus,input[type=date]:focus{border-color:var(--y);box-shadow:0 0 0 3px r
             <div class="alert-num" id="alertTukangNum">0 Follow Up Tukang</div>
             <div class="alert-text" id="alertTukangText"></div>
           </div>
+        </div>
+      </div>
+
+      <!-- SEBARAN LOKASI LEADS -->
+      <div class="section">
+        <div class="card">
+          <div class="card-title">Sebaran Lokasi Leads</div>
+          <div class="card-desc">Alamat (Kota, Kecamatan, Kabupaten) dari Database TDK, periode terpilih — diurutkan dari yang paling banyak</div>
+          <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px;padding-bottom:10px">
+            <div style="font-size:28px;font-weight:800;color:var(--text)" id="alamatTotal">—</div>
+            <div style="font-size:12px;color:var(--text-dim)">total leads dengan lokasi tercatat</div>
+          </div>
+          <div style="font-size:12px;color:var(--text-dim);margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)" id="alamatPct">—</div>
+          <div id="alamatList"></div>
         </div>
       </div>
 
@@ -270,6 +308,15 @@ select:focus,input[type=date]:focus{border-color:var(--y);box-shadow:0 0 0 3px r
         </div>
       </div>
 
+      <!-- CATATAN KOLOM H (mentah, per periode) -->
+      <div class="section">
+        <div class="card">
+          <div class="card-title">Catatan Harian (Kolom H — Sheet "Log Aktivitas")</div>
+          <div class="card-desc">Isi kolom Catatan apa adanya, selama periode terpilih</div>
+          <div class="catatan-list" id="catatanList"></div>
+        </div>
+      </div>
+
       <!-- CATATAN UMUM -->
       <div class="section">
         <div class="card">
@@ -297,13 +344,17 @@ select:focus,input[type=date]:focus{border-color:var(--y);box-shadow:0 0 0 3px r
 const SPREADSHEET_ID='1Z3kXM4e4Ic6YUhhYzB3mrlSwXAbrYqJedgNDsbNtmuk';
 const SHEET_LOG='Log Aktivitas';
 const SHEET_SUMMARY='Ringkasan Harian';
+// Sumber data leads (Arsip/Beli/Follow Up/Alamat) — spreadsheet TERPISAH
+const TDK_SPREADSHEET_ID='1k8gxOxuiwghZW6ldkXrrvHpOD7zOau9zgWfypJL0DNs';
+const SHEET_TDK='Database TDK';
 
-let summaryRows=[],logNotes=[],chatChart=null,problemChart=null;
+let summaryRows=[],logNotes=[],tdkLeads=[],chatChart=null,problemChart=null;
 
 /* ---------- FETCH VIA JSONP (gviz CSV export tidak kirim header CORS,
    jadi fetch() biasa akan selalu gagal walau sheet sudah public.
    JSONP pakai <script> tag, yang tidak tunduk pada aturan CORS) ---------- */
-function fetchSheetJSONP(sheetName){
+function fetchSheetJSONP(sheetName,spreadsheetId){
+  const ssId=spreadsheetId||SPREADSHEET_ID;
   return new Promise((resolve,reject)=>{
     const cbName='gvizCb_'+Math.random().toString(36).slice(2);
     const timeout=setTimeout(()=>{cleanup();reject(new Error(`Timeout mengambil sheet "${sheetName}" (>10 detik). Cek nama tab & koneksi.`));},10000);
@@ -322,7 +373,7 @@ function fetchSheetJSONP(sheetName){
       resolve(gvizTableToRows(resp.table));
     };
     const script=document.createElement('script');
-    script.src=`https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json;responseHandler:${cbName}&sheet=${encodeURIComponent(sheetName)}`;
+    script.src=`https://docs.google.com/spreadsheets/d/${ssId}/gviz/tq?tqx=out:json;responseHandler:${cbName}&sheet=${encodeURIComponent(sheetName)}`;
     script.onerror=()=>{cleanup();reject(new Error(`Gagal load sheet "${sheetName}" — cek nama tab masih sama & sharing masih "Anyone with the link".`));};
     document.head.appendChild(script);
   });
@@ -366,7 +417,11 @@ async function loadData(manual){
   btn.disabled=true;
 
   try{
-    const [logRows,sumRows]=await Promise.all([fetchSheetJSONP(SHEET_LOG),fetchSheetJSONP(SHEET_SUMMARY)]);
+    const [logRows,sumRows,tdkRows]=await Promise.all([
+      fetchSheetJSONP(SHEET_LOG),
+      fetchSheetJSONP(SHEET_SUMMARY),
+      fetchSheetJSONP(SHEET_TDK,TDK_SPREADSHEET_ID)
+    ]);
 
     // ---- Parse Ringkasan Harian ----
     const sh=sumRows[0];
@@ -388,6 +443,27 @@ async function loadData(manual){
       const d=parseDateFlex(r[jDate]); const note=(r[jCatatan]||'').trim();
       if(!d||!note) return null;
       return{date:d,key:dkey(d),note};
+    }).filter(Boolean);
+
+    // ---- Parse Database TDK (Arsip/Beli/Follow Up/Alamat) ----
+    // Sheet-nya berisi beberapa tabel bertumpuk dalam 1 tab (data lama,
+    // dashboard ringkasan, data baru, dsb) dengan banyak baris merged/
+    // template. Header per-blok gak konsisten posisinya, jadi dipakai
+    // POSISI KOLOM TETAP (bukan cari nama header) + validasi "baris ini
+    // beneran data lead" lewat cek Kode Unik & Tanggal valid — ini
+    // otomatis nyaring baris judul/template/ringkasan yang nyempil.
+    // Kolom: A=No,B=Kode Unik,C=No WA,D=Nama,E=Alamat,F=Tanggal,
+    // G=Kategori Leads,H=Keterangan,I=Label Jadi Beli,J=Produk,K=Status,L=Type
+    tdkLeads=tdkRows.map(r=>{
+      const kode=(r[1]||'').trim();
+      const d=parseDateFlex(r[5]);
+      if(!kode || kode.toLowerCase()==='kode unik' || !d) return null;
+      return{
+        date:d, key:dkey(d),
+        alamat:(r[4]||'').trim(),
+        status:(r[10]||'').trim(),
+        label:(r[8]||'').trim().toUpperCase(),
+      };
     }).filter(Boolean);
 
     if(summaryRows.length===0) throw new Error('Data "Ringkasan Harian" kosong atau format kolom tidak terbaca.');
@@ -428,6 +504,11 @@ function applyPeriod(){
   const maxDate=summaryRows[summaryRows.length-1].date;
   let from,to;
   if(v==='all'){ from=summaryRows[0].date; to=maxDate; }
+  else if(v==='month'){
+    const now=new Date();
+    from=new Date(now.getFullYear(),now.getMonth(),1);
+    to=maxDate;
+  }
   else if(v==='custom'){
     from=new Date(document.getElementById('dateFrom').value+'T00:00:00');
     to=new Date(document.getElementById('dateTo').value+'T00:00:00');
@@ -437,33 +518,44 @@ function applyPeriod(){
   }
   const filteredSummary=summaryRows.filter(r=>r.date>=from && r.date<=to);
   const filteredNotes=logNotes.filter(r=>r.date>=from && r.date<=to);
+  const filteredTdk=tdkLeads.filter(r=>r.date>=from && r.date<=to);
 
   document.getElementById('periodMeta').innerHTML=
     `Menampilkan <b>${filteredSummary.length} hari tercatat</b> &nbsp;(${dlabel(from)} — ${dlabel(to)})`;
 
-  render(filteredSummary,filteredNotes);
+  render(filteredSummary,filteredNotes,filteredTdk);
 }
 
 /* ---------- RENDER ---------- */
-function render(rows,notes){
+function render(rows,notes,tdk){
   if(!rows.length){
     document.getElementById('k-lead').textContent='0';
-    ['k-resp','k-bm','k-fur','k-chat-total','k-chat-avg','k-chk-avg'].forEach(id=>document.getElementById(id).textContent='—');
+    ['k-arsip','k-beli','k-fu','k-bm','k-fur','k-chat-total','k-chat-avg','k-chk-avg'].forEach(id=>document.getElementById(id).textContent='—');
     document.getElementById('catatanUmum').innerHTML='<span class="empty-note">Tidak ada data untuk periode ini.</span>';
+    document.getElementById('alamatTotal').textContent='0';
+    document.getElementById('alamatPct').textContent='—';
+    document.getElementById('alamatList').innerHTML='<div class="alamat-empty">Tidak ada data untuk periode ini.</div>';
+    document.getElementById('catatanList').innerHTML='<div class="alamat-empty">Tidak ada data untuk periode ini.</div>';
     return;
   }
   const sum=(k)=>rows.reduce((a,r)=>a+r[k],0);
   const totalLead=sum('lead'), totalChat=sum('chat'), totalJwb=sum('jwb'),
         totalBm=sum('bm'), totalFur=sum('fur'), totalFut=sum('fut');
-  const respRate=totalChat>0?(totalJwb/totalChat*100):0;
   const bmRate=totalLead>0?(totalBm/totalLead*100):0;
   const chkAvg=rows.reduce((a,r)=>a+r.chk,0)/rows.length;
   const chatAvg=totalChat/rows.length;
 
+  // ---- Arsip / Beli / Follow Up (dari Database TDK, kolom Status & Label Jadi Beli) ----
+  const tdkArr=tdk||[];
+  const arsipCount=tdkArr.filter(r=>r.status.toLowerCase()==='arsip').length;
+  const beliCount=tdkArr.filter(r=>r.label==='BELI').length;
+  const fuStatuses=['follow up 1','follow up 2','follow up 3'];
+  const fuCount=tdkArr.filter(r=>fuStatuses.includes(r.status.toLowerCase())).length;
+
   document.getElementById('k-lead').textContent=totalLead;
-  document.getElementById('k-resp').textContent=respRate.toFixed(1)+'%';
-  document.getElementById('k-resp-sub').textContent=`${totalJwb} dari ${totalChat} chat terjawab`;
-  setBadge('k-resp-badge',respRate>=90?['Sehat','ok']:respRate>=75?['Perlu Diperhatikan','warn']:['Rendah','bad']);
+  document.getElementById('k-arsip').textContent=arsipCount;
+  document.getElementById('k-beli').textContent=beliCount;
+  document.getElementById('k-fu').textContent=fuCount;
 
   document.getElementById('k-bm').textContent=totalBm;
   document.getElementById('k-bm-sub').textContent=bmRate.toFixed(1)+'% dari total leads baru';
@@ -489,6 +581,33 @@ function render(rows,notes){
     tText.innerHTML='Ada aktivitas follow-up tukang pada periode ini — pertahankan ritmenya.';
   }
 
+  // ---- Sebaran Lokasi Leads (Alamat) — ngikut periode terpilih ----
+  const alamatMap={};
+  const tdkArrForAlamat=tdk||[];
+  tdkArrForAlamat.forEach(r=>{
+    let a=(r.alamat||'').trim();
+    if(!a||a==='-') return; // skip yang gak diisi
+    alamatMap[a]=(alamatMap[a]||0)+1;
+  });
+  const alamatSorted=Object.keys(alamatMap).map(k=>({name:k,count:alamatMap[k]})).sort((a,b)=>b.count-a.count);
+  const alamatTotalCount=alamatSorted.reduce((a,c)=>a+c.count,0);
+  document.getElementById('alamatTotal').textContent=alamatTotalCount;
+  const alamatPct=totalLead>0?(alamatTotalCount/totalLead*100):0;
+  document.getElementById('alamatPct').innerHTML=
+    `<b style="color:var(--text)">${alamatPct.toFixed(1)}%</b> dari Total Leads Baru (${totalLead}) pada periode ini`;
+  const alamatEl=document.getElementById('alamatList');
+  if(alamatSorted.length===0){
+    alamatEl.innerHTML='<div class="alamat-empty">Tidak ada data alamat pada periode ini.</div>';
+  }else{
+    const maxCount=alamatSorted[0].count;
+    alamatEl.innerHTML=alamatSorted.slice(0,15).map(a=>`
+      <div class="alamat-row">
+        <div class="alamat-name">${escHtml(a.name)}</div>
+        <div class="alamat-bar-wrap"><div class="alamat-bar" style="width:${(a.count/maxCount*100).toFixed(0)}%"></div></div>
+        <div class="alamat-count">${a.count}</div>
+      </div>`).join('');
+  }
+
   // Heatmap
   document.getElementById('heatmapRow').innerHTML=rows.map(r=>{
     const cls=r.chk===100?'heat-100':(r.chk>=60?'heat-mid':'heat-low');
@@ -508,6 +627,19 @@ function render(rows,notes){
     const t=n.note.toLowerCase();
     return c.kw.some(k=>t.includes(k));
   }).length);
+
+  // Catatan Harian mentah (Kolom H), terbaru duluan
+  const catatanEl=document.getElementById('catatanList');
+  const notesSorted=[...notes].sort((a,b)=>b.date-a.date);
+  if(notesSorted.length===0){
+    catatanEl.innerHTML='<div class="alamat-empty">Tidak ada catatan pada periode ini.</div>';
+  }else{
+    catatanEl.innerHTML=notesSorted.map(n=>`
+      <div class="catatan-row">
+        <div class="catatan-date">${dlabel(n.date)}</div>
+        <div class="catatan-text">${escHtml(n.note)}</div>
+      </div>`).join('');
+  }
 
   // Catatan Umum — rangkuman otomatis
   const sorted=cats.map((c,i)=>({label:c.label,count:counts[i]})).filter(c=>c.count>0).sort((a,b)=>b.count-a.count);
@@ -531,6 +663,8 @@ function render(rows,notes){
   buildCharts(rows,cats.map(c=>c.label),counts);
 }
 
+function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
 function setBadge(id,[label,kind]){
   const el=document.getElementById(id);
   el.textContent=label;
@@ -541,16 +675,39 @@ function chartColors(){
   const dark=document.body.classList.contains('dark');
   return{grid:dark?'rgba(255,255,255,.06)':'rgba(33,31,29,.05)',text:dark?'#A8A39A':'#6B6660',line:'#F5C400',fill:dark?'rgba(245,196,0,.10)':'rgba(245,196,0,.14)'};
 }
+function linearTrend(values){
+  const n=values.length;
+  if(n===0) return [];
+  if(n===1) return [values[0]];
+  const xs=values.map((_,i)=>i);
+  const sumX=xs.reduce((a,b)=>a+b,0), sumY=values.reduce((a,b)=>a+b,0);
+  const sumXY=xs.reduce((a,x,i)=>a+x*values[i],0);
+  const sumXX=xs.reduce((a,x)=>a+x*x,0);
+  const denom=(n*sumXX-sumX*sumX);
+  const slope=denom===0?0:(n*sumXY-sumX*sumY)/denom;
+  const intercept=(sumY-slope*sumX)/n;
+  return xs.map(x=>slope*x+intercept);
+}
 function buildCharts(rows,catLabels,catCounts){
   const c=chartColors();
   if(chatChart)chatChart.destroy();
   if(problemChart)problemChart.destroy();
 
+  const chatValues=rows.map(r=>r.chat);
+  const trend=linearTrend(chatValues);
+  const dark=document.body.classList.contains('dark');
+  const trendColor=dark?'#F5F3EF':'#211F1D';
+
   chatChart=new Chart(document.getElementById('chatChart'),{
     type:'line',
-    data:{labels:rows.map(r=>r.label),datasets:[{label:'Chat Masuk',data:rows.map(r=>r.chat),
-      borderColor:c.line,backgroundColor:c.fill,borderWidth:2.5,pointRadius:4,pointBackgroundColor:c.line,tension:.35,fill:true}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+    data:{labels:rows.map(r=>r.label),datasets:[
+      {label:'Chat Masuk',data:chatValues,
+        borderColor:c.line,backgroundColor:c.fill,borderWidth:2.5,pointRadius:4,pointBackgroundColor:c.line,tension:.35,fill:true},
+      {label:'Tren',data:trend,
+        borderColor:trendColor,backgroundColor:'transparent',borderWidth:2,borderDash:[6,4],pointRadius:0,tension:0,fill:false}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'top',align:'end',
+        labels:{boxWidth:14,font:{size:10.5,family:'Poppins'},color:c.text}}},
       scales:{x:{grid:{display:false},ticks:{font:{size:10.5,family:'Poppins'},color:c.text}},
               y:{grid:{color:c.grid},ticks:{font:{size:10.5,family:'Poppins'},color:c.text}}}}
   });
