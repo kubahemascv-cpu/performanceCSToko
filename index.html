@@ -110,6 +110,16 @@ select:focus,input[type=date]:focus{border-color:var(--y);box-shadow:0 0 0 3px r
 .alamat-count{width:34px;text-align:right;font-size:12.5px;font-weight:700;color:var(--text)}
 .alamat-empty{font-size:11.5px;color:var(--text-dim);padding:8px 0}
 
+.gap-row{padding:10px 0;border-bottom:1px solid var(--border)}
+.gap-row:last-child{border-bottom:none}
+.gap-name{font-size:12.5px;font-weight:600;color:var(--text);margin-bottom:6px}
+.gap-bar-wrap{display:flex;height:9px;border-radius:6px;overflow:hidden;background:var(--surface-2);margin-bottom:5px}
+.gap-bar-belum{height:100%;background:#DC2626}
+.gap-bar-kendala{height:100%;background:#D97706}
+.gap-legend{display:flex;gap:14px;font-size:10.5px;color:var(--text-dim)}
+.gap-legend b{color:var(--text)}
+.gap-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px}
+
 .catatan-list{max-height:280px;overflow-y:auto;margin-top:6px}
 .catatan-row{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);font-size:12px}
 .catatan-row:last-child{border-bottom:none}
@@ -308,6 +318,15 @@ select:focus,input[type=date]:focus{border-color:var(--y);box-shadow:0 0 0 3px r
         </div>
       </div>
 
+      <!-- CHECKLIST YANG SERING TERLEWAT -->
+      <div class="section">
+        <div class="card">
+          <div class="card-title">Checklist yang Sering Terlewat</div>
+          <div class="card-desc">Bongkar dari persentase Kepatuhan Checklist di atas — tugas mana spesifiknya yang paling sering BELUM/KENDALA, periode terpilih (Sheet "Log Aktivitas")</div>
+          <div id="checklistGapList"></div>
+        </div>
+      </div>
+
       <!-- CATATAN KOLOM H (mentah, per periode) -->
       <div class="section">
         <div class="card">
@@ -348,7 +367,7 @@ const SHEET_SUMMARY='Ringkasan Harian';
 const TDK_SPREADSHEET_ID='1k8gxOxuiwghZW6ldkXrrvHpOD7zOau9zgWfypJL0DNs';
 const SHEET_TDK='Database TDK';
 
-let summaryRows=[],logNotes=[],tdkLeads=[],chatChart=null,problemChart=null;
+let summaryRows=[],logNotes=[],logActivities=[],tdkLeads=[],chatChart=null,problemChart=null;
 
 /* ---------- FETCH VIA JSONP (gviz CSV export tidak kirim header CORS,
    jadi fetch() biasa akan selalu gagal walau sheet sudah public.
@@ -436,13 +455,20 @@ async function loadData(manual){
         fur:num(r[iFur]),fut:num(r[iFut]),bm:num(r[iBm]),chk:num(r[iChk])};
     }).filter(Boolean).sort((a,b)=>a.date-b.date);
 
-    // ---- Parse Log Aktivitas (ambil baris dengan catatan saja) ----
+    // ---- Parse Log Aktivitas (catatan + status tiap tugas checklist) ----
     const lh=logRows[0];
-    const jDate=colIdx(lh,'tanggal'), jCatatan=colIdx(lh,'catatan');
+    const jDate=colIdx(lh,'tanggal'), jCatatan=colIdx(lh,'catatan'),
+          jAktivitas=colIdx(lh,'aktivitas'), jStatus=colIdx(lh,'status');
     logNotes=logRows.slice(1).map(r=>{
       const d=parseDateFlex(r[jDate]); const note=(r[jCatatan]||'').trim();
       if(!d||!note) return null;
       return{date:d,key:dkey(d),note};
+    }).filter(Boolean);
+    logActivities=logRows.slice(1).map(r=>{
+      const d=parseDateFlex(r[jDate]); const aktivitas=(r[jAktivitas]||'').trim();
+      const status=(r[jStatus]||'').trim().toUpperCase();
+      if(!d||!aktivitas||!status) return null;
+      return{date:d,key:dkey(d),aktivitas,status};
     }).filter(Boolean);
 
     // ---- Parse Database TDK (Arsip/Beli/Follow Up/Alamat) ----
@@ -518,16 +544,17 @@ function applyPeriod(){
   }
   const filteredSummary=summaryRows.filter(r=>r.date>=from && r.date<=to);
   const filteredNotes=logNotes.filter(r=>r.date>=from && r.date<=to);
+  const filteredActivities=logActivities.filter(r=>r.date>=from && r.date<=to);
   const filteredTdk=tdkLeads.filter(r=>r.date>=from && r.date<=to);
 
   document.getElementById('periodMeta').innerHTML=
     `Menampilkan <b>${filteredSummary.length} hari tercatat</b> &nbsp;(${dlabel(from)} — ${dlabel(to)})`;
 
-  render(filteredSummary,filteredNotes,filteredTdk);
+  render(filteredSummary,filteredNotes,filteredTdk,filteredActivities);
 }
 
 /* ---------- RENDER ---------- */
-function render(rows,notes,tdk){
+function render(rows,notes,tdk,activities){
   if(!rows.length){
     document.getElementById('k-lead').textContent='0';
     ['k-arsip','k-beli','k-fu','k-bm','k-fur','k-chat-total','k-chat-avg','k-chk-avg'].forEach(id=>document.getElementById(id).textContent='—');
@@ -536,6 +563,7 @@ function render(rows,notes,tdk){
     document.getElementById('alamatPct').textContent='—';
     document.getElementById('alamatList').innerHTML='<div class="alamat-empty">Tidak ada data untuk periode ini.</div>';
     document.getElementById('catatanList').innerHTML='<div class="alamat-empty">Tidak ada data untuk periode ini.</div>';
+    document.getElementById('checklistGapList').innerHTML='<div class="alamat-empty">Tidak ada data untuk periode ini.</div>';
     return;
   }
   const sum=(k)=>rows.reduce((a,r)=>a+r[k],0);
@@ -627,6 +655,41 @@ function render(rows,notes,tdk){
     const t=n.note.toLowerCase();
     return c.kw.some(k=>t.includes(k));
   }).length);
+
+  // Checklist yang Sering Terlewat — dari Log Aktivitas: Aktivitas + Status
+  const gapEl=document.getElementById('checklistGapList');
+  const actArr=activities||[];
+  const gapMap={}; // { 'Nama Tugas': {belum:0, kendala:0} }
+  actArr.forEach(a=>{
+    if(a.status!=='BELUM' && a.status!=='KENDALA') return; // SELESAI diabaikan
+    if(!gapMap[a.aktivitas]) gapMap[a.aktivitas]={belum:0,kendala:0};
+    if(a.status==='BELUM') gapMap[a.aktivitas].belum++;
+    else gapMap[a.aktivitas].kendala++;
+  });
+  const gapSorted=Object.keys(gapMap).map(k=>({
+    nama:k, belum:gapMap[k].belum, kendala:gapMap[k].kendala,
+    total:gapMap[k].belum+gapMap[k].kendala
+  })).sort((a,b)=>b.total-a.total);
+  if(gapSorted.length===0){
+    gapEl.innerHTML='<div class="alamat-empty">✅ Semua checklist tercatat SELESAI pada periode ini — gak ada yang bolong.</div>';
+  }else{
+    const maxTotal=gapSorted[0].total;
+    gapEl.innerHTML=gapSorted.map(g=>{
+      const belumPct=(g.belum/maxTotal*100).toFixed(0);
+      const kendalaPct=(g.kendala/maxTotal*100).toFixed(0);
+      return `<div class="gap-row">
+        <div class="gap-name">${escHtml(g.nama)}</div>
+        <div class="gap-bar-wrap">
+          <div class="gap-bar-belum" style="width:${belumPct}%"></div>
+          <div class="gap-bar-kendala" style="width:${kendalaPct}%"></div>
+        </div>
+        <div class="gap-legend">
+          <span><span class="gap-dot" style="background:#DC2626"></span>Belum: <b>${g.belum}x</b></span>
+          <span><span class="gap-dot" style="background:#D97706"></span>Kendala: <b>${g.kendala}x</b></span>
+        </div>
+      </div>`;
+    }).join('');
+  }
 
   // Catatan Harian mentah (Kolom H), terbaru duluan
   const catatanEl=document.getElementById('catatanList');
