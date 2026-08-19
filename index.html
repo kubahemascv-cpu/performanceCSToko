@@ -104,11 +104,20 @@ select:focus,input[type=date]:focus{border-color:var(--y);box-shadow:0 0 0 3px r
 
 .alamat-row{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--border)}
 .alamat-row:last-child{border-bottom:none}
+.alamat-row.clickable{cursor:pointer}
+.alamat-row.clickable:hover{background:var(--surface-2)}
 .alamat-name{flex:1;font-size:12.5px;color:var(--text);font-weight:500}
 .alamat-bar-wrap{flex:2;height:8px;background:var(--surface-2);border-radius:6px;overflow:hidden}
 .alamat-bar{height:100%;background:var(--y);border-radius:6px}
 .alamat-count{width:34px;text-align:right;font-size:12.5px;font-weight:700;color:var(--text)}
 .alamat-empty{font-size:11.5px;color:var(--text-dim);padding:8px 0}
+.alamat-pct-tag{width:46px;text-align:right;font-size:11px;font-weight:700;color:var(--text-dim)}
+.alamat-caret{width:14px;text-align:center;font-size:10px;color:var(--text-dim);transition:transform .15s}
+.alamat-caret.open{transform:rotate(90deg)}
+.alamat-detail{max-height:0;overflow:hidden;transition:max-height .2s ease;padding-left:16px;border-left:2px solid var(--border);margin-left:2px}
+.alamat-detail.open{max-height:600px}
+.alamat-detail .alamat-row{padding:7px 0}
+.alamat-detail .alamat-name{font-size:11.5px;color:var(--text-dim)}
 
 .gap-row{padding:10px 0;border-bottom:1px solid var(--border)}
 .gap-row:last-child{border-bottom:none}
@@ -273,12 +282,13 @@ select:focus,input[type=date]:focus{border-color:var(--y);box-shadow:0 0 0 3px r
       <div class="section">
         <div class="card">
           <div class="card-title">Sebaran Lokasi Leads</div>
-          <div class="card-desc">Alamat (Kota, Kecamatan, Kabupaten) dari Database TDK, periode terpilih — diurutkan dari yang paling banyak</div>
+          <div class="card-desc">Dikelompokkan per Kabupaten dari format "Desa/Kecamatan, Kabupaten" — klik salah satu buat lihat breakdown desa/kecamatannya</div>
           <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px;padding-bottom:10px">
             <div style="font-size:28px;font-weight:800;color:var(--text)" id="alamatTotal">—</div>
             <div style="font-size:12px;color:var(--text-dim)">total leads dengan lokasi tercatat</div>
           </div>
           <div style="font-size:12px;color:var(--text-dim);margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)" id="alamatPct">—</div>
+          <div class="chart-box h200" style="margin-bottom:16px"><canvas id="kabupatenChart"></canvas></div>
           <div id="alamatList"></div>
         </div>
       </div>
@@ -367,7 +377,7 @@ const SHEET_SUMMARY='Ringkasan Harian';
 const TDK_SPREADSHEET_ID='1k8gxOxuiwghZW6ldkXrrvHpOD7zOau9zgWfypJL0DNs';
 const SHEET_TDK='Database TDK';
 
-let summaryRows=[],logNotes=[],logActivities=[],tdkLeads=[],chatChart=null,problemChart=null;
+let summaryRows=[],logNotes=[],logActivities=[],tdkLeads=[],chatChart=null,problemChart=null,kabupatenChart=null;
 
 /* ---------- FETCH VIA JSONP (gviz CSV export tidak kirim header CORS,
    jadi fetch() biasa akan selalu gagal walau sheet sudah public.
@@ -562,6 +572,7 @@ function render(rows,notes,tdk,activities){
     document.getElementById('alamatTotal').textContent='0';
     document.getElementById('alamatPct').textContent='—';
     document.getElementById('alamatList').innerHTML='<div class="alamat-empty">Tidak ada data untuk periode ini.</div>';
+    if(kabupatenChart){kabupatenChart.destroy();kabupatenChart=null;}
     document.getElementById('catatanList').innerHTML='<div class="alamat-empty">Tidak ada data untuk periode ini.</div>';
     document.getElementById('checklistGapList').innerHTML='<div class="alamat-empty">Tidak ada data untuk periode ini.</div>';
     return;
@@ -609,13 +620,23 @@ function render(rows,notes,tdk,activities){
     tText.innerHTML='Ada aktivitas follow-up tukang pada periode ini — pertahankan ritmenya.';
   }
 
-  // ---- Sebaran Lokasi Leads (Alamat) — ngikut periode terpilih ----
-  const alamatMap={};
+  // ---- Sebaran Lokasi Leads (Alamat) — dikelompokkan per KABUPATEN,
+  // format yang diharapkan "Desa/Kecamatan, Kabupaten" (misal "MUNGGUT,
+  // NGAWI"). Kabupaten diambil dari bagian SETELAH koma terakhir. Alamat
+  // yang gak ikutin format itu (gak ada koma) masuk kelompok terpisah
+  // "Format Tidak Standar" biar ketauan, bukan kebaca salah diam-diam.
+  const alamatMap={};       // detail per string alamat mentah (buat drill-down)
+  const kabupatenMap={};    // agregat per kabupaten (tampilan utama + chart)
   const tdkArrForAlamat=tdk||[];
   tdkArrForAlamat.forEach(r=>{
     let a=(r.alamat||'').trim();
     if(!a||a==='-') return; // skip yang gak diisi
     alamatMap[a]=(alamatMap[a]||0)+1;
+    const parts=a.split(',').map(s=>s.trim()).filter(Boolean);
+    const kab=parts.length>=2 ? parts[parts.length-1].toUpperCase() : 'FORMAT TIDAK STANDAR';
+    if(!kabupatenMap[kab]) kabupatenMap[kab]={count:0, detail:{}};
+    kabupatenMap[kab].count++;
+    kabupatenMap[kab].detail[a]=(kabupatenMap[kab].detail[a]||0)+1;
   });
   const alamatSorted=Object.keys(alamatMap).map(k=>({name:k,count:alamatMap[k]})).sort((a,b)=>b.count-a.count);
   const alamatTotalCount=alamatSorted.reduce((a,c)=>a+c.count,0);
@@ -623,17 +644,62 @@ function render(rows,notes,tdk,activities){
   const alamatPct=totalLead>0?(alamatTotalCount/totalLead*100):0;
   document.getElementById('alamatPct').innerHTML=
     `<b style="color:var(--text)">${alamatPct.toFixed(1)}%</b> dari Total Leads Baru (${totalLead}) pada periode ini`;
+
+  const kabupatenSorted=Object.keys(kabupatenMap).map(k=>({
+    name:k, count:kabupatenMap[k].count, detail:kabupatenMap[k].detail
+  })).sort((a,b)=>b.count-a.count);
+
   const alamatEl=document.getElementById('alamatList');
-  if(alamatSorted.length===0){
+  if(kabupatenSorted.length===0){
     alamatEl.innerHTML='<div class="alamat-empty">Tidak ada data alamat pada periode ini.</div>';
+    if(kabupatenChart){kabupatenChart.destroy();kabupatenChart=null;}
   }else{
-    const maxCount=alamatSorted[0].count;
-    alamatEl.innerHTML=alamatSorted.slice(0,15).map(a=>`
-      <div class="alamat-row">
-        <div class="alamat-name">${escHtml(a.name)}</div>
-        <div class="alamat-bar-wrap"><div class="alamat-bar" style="width:${(a.count/maxCount*100).toFixed(0)}%"></div></div>
-        <div class="alamat-count">${a.count}</div>
-      </div>`).join('');
+    const maxCount=kabupatenSorted[0].count;
+    alamatEl.innerHTML=kabupatenSorted.map((k,idx)=>{
+      const pct=alamatTotalCount>0?(k.count/alamatTotalCount*100):0;
+      const detailSorted=Object.keys(k.detail).map(dk=>({name:dk,count:k.detail[dk]})).sort((a,b)=>b.count-a.count);
+      const maxDetail=detailSorted[0]?detailSorted[0].count:1;
+      const detailHtml=detailSorted.map(d=>`
+        <div class="alamat-row">
+          <div class="alamat-name">${escHtml(d.name)}</div>
+          <div class="alamat-bar-wrap"><div class="alamat-bar" style="width:${(d.count/maxDetail*100).toFixed(0)}%"></div></div>
+          <div class="alamat-count">${d.count}</div>
+        </div>`).join('');
+      return `
+      <div class="alamat-row clickable" onclick="toggleKabupatenDetail(${idx})">
+        <div class="alamat-caret" id="kabCaret${idx}">▶</div>
+        <div class="alamat-name">${escHtml(k.name)}</div>
+        <div class="alamat-bar-wrap"><div class="alamat-bar" style="width:${(k.count/maxCount*100).toFixed(0)}%"></div></div>
+        <div class="alamat-pct-tag">${pct.toFixed(1)}%</div>
+        <div class="alamat-count">${k.count}</div>
+      </div>
+      <div class="alamat-detail" id="kabDetail${idx}">${detailHtml}</div>`;
+    }).join('');
+  }
+
+  // Diagram persentase per Kabupaten
+  if(kabupatenSorted.length>0){
+    const palette=['#F5C518','#4F46E5','#10B981','#F97316','#EC4899','#06B6D4','#8B5CF6','#84CC16','#EF4444','#64748B'];
+    if(kabupatenChart)kabupatenChart.destroy();
+    kabupatenChart=new Chart(document.getElementById('kabupatenChart'),{
+      type:'doughnut',
+      data:{
+        labels:kabupatenSorted.map(k=>k.name),
+        datasets:[{
+          data:kabupatenSorted.map(k=>k.count),
+          backgroundColor:kabupatenSorted.map((_,i)=>palette[i%palette.length]),
+          borderColor:'var(--surface)',borderWidth:2
+        }]
+      },
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{
+          legend:{position:'right',labels:{boxWidth:10,font:{size:10.5,family:'Poppins'},color:chartColors().text}},
+          tooltip:{callbacks:{label:function(ctx){
+            const pct=alamatTotalCount>0?(ctx.parsed/alamatTotalCount*100):0;
+            return ctx.label+': '+ctx.parsed+' ('+pct.toFixed(1)+'%)';
+          }}}
+        }}
+    });
   }
 
   // Heatmap
@@ -727,6 +793,14 @@ function render(rows,notes,tdk,activities){
 }
 
 function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function toggleKabupatenDetail(idx){
+  const detail=document.getElementById('kabDetail'+idx);
+  const caret=document.getElementById('kabCaret'+idx);
+  if(!detail||!caret) return;
+  const isOpen=detail.classList.toggle('open');
+  caret.classList.toggle('open',isOpen);
+}
 
 function setBadge(id,[label,kind]){
   const el=document.getElementById(id);
