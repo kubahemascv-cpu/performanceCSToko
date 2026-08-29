@@ -72,6 +72,21 @@ select:focus,input[type=date]:focus{border-color:var(--y);box-shadow:0 0 0 3px r
 .btn:hover{opacity:.85;transform:translateY(-1px)}
 .btn-y{background:var(--y);color:var(--charcoal)}
 .btn-ghost{background:var(--surface-2);color:var(--text);border:1px solid var(--border-mid)}
+.dl-wrap{position:relative}
+.dl-menu{display:none;position:absolute;top:calc(100% + 6px);left:0;background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);z-index:50;overflow:hidden;min-width:160px}
+.dl-menu.open{display:block}
+.dl-menu button{width:100%;text-align:left;padding:10px 14px;border:none;background:none;font-family:'Poppins',sans-serif;font-size:12.5px;font-weight:500;color:var(--text);cursor:pointer}
+.dl-menu button:hover{background:var(--surface-2)}
+#printHeader{display:none}
+@media print{
+  .period-bar,.theme-toggle,#loadingBanner,#errorBanner,.footer-note{display:none !important}
+  #printHeader{display:block !important;margin:0 0 20px}
+  #printHeader .ph-title{font-size:18px;font-weight:800;color:#000}
+  #printHeader .ph-sub{font-size:11px;color:#555;margin-top:3px}
+  body{background:#fff}
+  .card,.kpi-card,.alert-card{box-shadow:none !important;border:1px solid #ddd !important;break-inside:avoid}
+  .section{break-inside:avoid}
+}
 #customRange{display:none;align-items:center;gap:8px}
 .period-meta{font-size:10.5px;color:var(--text-faint);margin-left:auto;text-align:right}
 .period-meta b{color:var(--text-dim)}
@@ -186,6 +201,11 @@ select:focus,input[type=date]:focus{border-color:var(--y);box-shadow:0 0 0 3px r
 
   <div class="page-title">Dashboard Admin / CS</div>
 
+  <div id="printHeader">
+    <div class="ph-title">Laporan Performa CS Toko — Kubah Emas</div>
+    <div class="ph-sub" id="printHeaderMeta"></div>
+  </div>
+
   <div class="body-pad">
 
     <!-- PERIOD CONTROL -->
@@ -206,6 +226,13 @@ select:focus,input[type=date]:focus{border-color:var(--y);box-shadow:0 0 0 3px r
         <button class="btn btn-y" onclick="applyCustomRange()">Terapkan</button>
       </div>
       <button class="btn btn-ghost" id="refreshBtn" onclick="loadData(true)">⟳ Muat Ulang Data</button>
+      <div class="dl-wrap">
+        <button class="btn btn-y" id="dlBtn" onclick="toggleDlMenu()">⬇ Download Laporan</button>
+        <div class="dl-menu" id="dlMenu">
+          <button onclick="downloadPDF()">📄 Unduh PDF</button>
+          <button onclick="downloadCSV()">📊 Unduh CSV</button>
+        </div>
+      </div>
       <div class="period-meta" id="periodMeta">Memuat data...</div>
     </div>
 
@@ -437,6 +464,104 @@ function num(s){ if(s===undefined||s===null)return 0; const c=String(s).replace(
 function dkey(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
 function dlabel(d){ return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0'); }
 
+/* ---------- DOWNLOAD LAPORAN (PDF & CSV) ---------- */
+let EXPORT_DATA = null;
+
+function toggleDlMenu(){
+  document.getElementById('dlMenu').classList.toggle('open');
+}
+document.addEventListener('click', function(e){
+  const wrap = document.querySelector('.dl-wrap');
+  if(wrap && !wrap.contains(e.target)) document.getElementById('dlMenu').classList.remove('open');
+});
+
+function todayFileStr(){
+  const d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+// PDF: pakai print bawaan browser (Simpan sebagai PDF), bukan library
+// tambahan — lebih ringan & chart Chart.js otomatis ikut kecetak karena
+// emang berupa canvas biasa. CSS khusus @media print ngatur tampilannya.
+function downloadPDF(){
+  document.getElementById('dlMenu').classList.remove('open');
+  if(!EXPORT_DATA){ alert('Data belum dimuat / kosong untuk periode ini.'); return; }
+  document.getElementById('printHeaderMeta').textContent =
+    EXPORT_DATA.periodLabel + ' • Dicetak ' + new Date().toLocaleString('id-ID');
+  window.print();
+}
+
+function downloadCSV(){
+  document.getElementById('dlMenu').classList.remove('open');
+  if(!EXPORT_DATA){ alert('Data belum dimuat / kosong untuk periode ini.'); return; }
+  const q = (s) => '"'+String(s==null?'':s).replace(/"/g,'""')+'"';
+  const lines = [];
+
+  lines.push(q('LAPORAN PERFORMA CS TOKO — KUBAH EMAS'));
+  lines.push(q('Periode')+','+q(EXPORT_DATA.periodLabel.replace(/<[^>]+>/g,'')));
+  lines.push('');
+
+  lines.push(q('RINGKASAN KPI'));
+  lines.push(q('Metrik')+','+q('Nilai'));
+  const k = EXPORT_DATA.kpi;
+  lines.push(q('Total Leads Baru')+','+k.totalLead);
+  lines.push(q('Arsip')+','+k.arsipCount);
+  lines.push(q('Beli')+','+k.beliCount);
+  lines.push(q('Follow Up')+','+k.fuCount);
+  lines.push(q('FU Review Google')+','+k.totalFur);
+  lines.push(q('Leads Bermasalah')+','+k.totalBm+' ('+k.bmRate.toFixed(1)+'%)');
+  lines.push(q('FU Tukang')+','+k.totalFut);
+  lines.push(q('Chat Masuk (Total)')+','+k.totalChat);
+  lines.push(q('Chat Masuk (Rata-rata/Hari)')+','+Math.round(k.chatAvg));
+  lines.push(q('Kepatuhan Checklist (Rata-rata)')+','+k.chkAvg.toFixed(0)+'%');
+  lines.push('');
+
+  lines.push(q('SEBARAN LOKASI PER KABUPATEN'));
+  lines.push(q('Kabupaten')+','+q('Jumlah Leads')+','+q('Persentase'));
+  const totalAlamat = EXPORT_DATA.kabupaten.reduce((s,x)=>s+x.count,0);
+  EXPORT_DATA.kabupaten.forEach(function(x){
+    const pct = totalAlamat>0 ? (x.count/totalAlamat*100).toFixed(1) : '0';
+    lines.push(q(x.name)+','+x.count+','+q(pct+'%'));
+  });
+  lines.push('');
+
+  lines.push(q('CHECKLIST YANG SERING TERLEWAT'));
+  lines.push(q('Nama Tugas')+','+q('Belum')+','+q('Kendala')+','+q('Total'));
+  if(EXPORT_DATA.checklistGap.length===0){
+    lines.push(q('Semua checklist tercatat SELESAI pada periode ini')+',,,');
+  } else {
+    EXPORT_DATA.checklistGap.forEach(function(g){
+      lines.push(q(g.nama)+','+g.belum+','+g.kendala+','+g.total);
+    });
+  }
+  lines.push('');
+
+  lines.push(q('CATATAN HARIAN'));
+  lines.push(q('Tanggal')+','+q('Catatan'));
+  if(EXPORT_DATA.catatanHarian.length===0){
+    lines.push(q('Tidak ada catatan pada periode ini')+',');
+  } else {
+    EXPORT_DATA.catatanHarian.forEach(function(n){
+      lines.push(q(dlabel(n.date))+','+q(n.note));
+    });
+  }
+  lines.push('');
+
+  lines.push(q('CATATAN UMUM (Rangkuman Otomatis)'));
+  lines.push(q(EXPORT_DATA.catatanUmum.replace(/<[^>]+>/g,'')));
+
+  // \uFEFF (BOM) di depan biar Excel baca karakter Indonesia (é, dst) dengan benar
+  const blob = new Blob(['\uFEFF'+lines.join('\r\n')], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'Laporan_CS_Toko_'+todayFileStr()+'.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 /* ---------- FETCH & PARSE SHEETS ---------- */
 async function loadData(manual){
   document.getElementById('dashContent').style.display='none';
@@ -566,6 +691,7 @@ function applyPeriod(){
 /* ---------- RENDER ---------- */
 function render(rows,notes,tdk,activities){
   if(!rows.length){
+    EXPORT_DATA = null;
     document.getElementById('k-lead').textContent='0';
     ['k-arsip','k-beli','k-fu','k-bm','k-fur','k-chat-total','k-chat-avg','k-chk-avg'].forEach(id=>document.getElementById(id).textContent='—');
     document.getElementById('catatanUmum').innerHTML='<span class="empty-note">Tidak ada data untuk periode ini.</span>';
@@ -790,6 +916,18 @@ function render(rows,notes,tdk,activities){
   document.getElementById('catatanUmum').innerHTML=para;
 
   buildCharts(rows,cats.map(c=>c.label),counts);
+
+  // Simpen semua data yang udah kehitung buat dipakai fitur Download —
+  // biar gak perlu ngitung ulang dari nol (dan resiko hasilnya beda
+  // dari yang keliatan di layar).
+  EXPORT_DATA = {
+    periodLabel: document.getElementById('periodMeta').textContent,
+    kpi: { totalLead, arsipCount, beliCount, fuCount, totalBm, bmRate, totalFur, totalFut, totalChat, chatAvg, chkAvg },
+    kabupaten: kabupatenSorted,
+    checklistGap: gapSorted,
+    catatanHarian: notesSorted,
+    catatanUmum: para,
+  };
 }
 
 function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
