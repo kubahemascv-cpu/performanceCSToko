@@ -225,6 +225,8 @@ select:focus,input[type=date]:focus{border-color:var(--y);box-shadow:0 0 0 3px r
         <option value="14" selected>14 Hari Terakhir</option>
         <option value="30">30 Hari Terakhir</option>
         <option value="month">Bulan Ini</option>
+        <option value="lastmonth">Bulan Lalu</option>
+        <option value="2monthsago">2 Bulan Lalu</option>
         <option value="all">Semua Data</option>
         <option value="custom">Custom Tanggal...</option>
       </select>
@@ -680,6 +682,16 @@ function applyPeriod(){
     const now=new Date();
     from=new Date(now.getFullYear(),now.getMonth(),1);
     to=maxDate;
+  }
+  else if(v==='lastmonth'){
+    const now=new Date();
+    from=new Date(now.getFullYear(),now.getMonth()-1,1);
+    to=new Date(now.getFullYear(),now.getMonth(),0); // hari terakhir bulan lalu
+  }
+  else if(v==='2monthsago'){
+    const now=new Date();
+    from=new Date(now.getFullYear(),now.getMonth()-2,1);
+    to=new Date(now.getFullYear(),now.getMonth()-1,0); // hari terakhir 2 bulan lalu
   }
   else if(v==='custom'){
     from=new Date(document.getElementById('dateFrom').value+'T00:00:00');
