@@ -297,10 +297,10 @@ select:focus,input[type=date]:focus{border-color:var(--y);box-shadow:0 0 0 3px r
             <div class="kpi-sub">total follow-up review periode ini</div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-label">Leads Bermasalah</div>
-            <div class="kpi-val" id="k-bm">—</div>
-            <div class="kpi-sub" id="k-bm-sub">—</div>
-            <span class="kpi-badge" id="k-bm-badge"></span>
+            <div class="kpi-label">Rata-rata Kepatuhan Checklist</div>
+            <div class="kpi-val" id="k-chkcard">—</div>
+            <div class="kpi-sub" id="k-chkcard-sub">—</div>
+            <span class="kpi-badge" id="k-chkcard-badge"></span>
           </div>
         </div>
       </div>
@@ -716,7 +716,7 @@ function render(rows,notes,tdk,activities){
   if(!rows.length){
     EXPORT_DATA = null;
     document.getElementById('k-lead').textContent='0';
-    ['k-arsip','k-beli','k-fu','k-bm','k-fur','k-chat-total','k-chat-avg','k-chk-avg'].forEach(id=>document.getElementById(id).textContent='—');
+    ['k-arsip','k-beli','k-fu','k-chkcard','k-fur','k-chat-total','k-chat-avg','k-chk-avg'].forEach(id=>document.getElementById(id).textContent='—');
     document.getElementById('catatanUmum').innerHTML='<span class="empty-note">Tidak ada data untuk periode ini.</span>';
     document.getElementById('alamatTotal').textContent='0';
     document.getElementById('alamatPct').textContent='—';
@@ -745,9 +745,9 @@ function render(rows,notes,tdk,activities){
   document.getElementById('k-beli').textContent=beliCount;
   document.getElementById('k-fu').textContent=fuCount;
 
-  document.getElementById('k-bm').textContent=totalBm;
-  document.getElementById('k-bm-sub').textContent=bmRate.toFixed(1)+'% dari total leads baru';
-  setBadge('k-bm-badge',bmRate<=15?['Wajar','ok']:bmRate<=30?['Perlu Ditelusuri','warn']:['Tinggi','bad']);
+  document.getElementById('k-chkcard').textContent=chkAvg.toFixed(0)+'%';
+  document.getElementById('k-chkcard-sub').textContent='rata-rata dari '+rows.length+' hari periode ini';
+  setBadge('k-chkcard-badge',chkAvg>=90?['Baik','ok']:chkAvg>=70?['Perlu Perhatian','warn']:['Rendah','bad']);
 
   document.getElementById('k-fur').textContent=totalFur;
   document.getElementById('k-chat-total').textContent=totalChat;
