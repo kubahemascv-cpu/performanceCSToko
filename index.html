@@ -117,6 +117,15 @@ select:focus,input[type=date]:focus{border-color:var(--y);box-shadow:0 0 0 3px r
 .card-title{font-size:14.5px;font-weight:600;margin-bottom:3px}
 .card-desc{font-size:11.5px;color:var(--text-dim);margin-bottom:16px}
 
+.area-stat-row{display:flex;gap:10px;margin-bottom:16px}
+.area-stat-box{flex:1;background:var(--surface-2);border-radius:12px;padding:12px 14px;border:1px solid var(--border)}
+.area-stat-box.target{border-left:3px solid #10B981}
+.area-stat-box.luar{border-left:3px solid #F97316}
+.area-stat-lbl{font-size:10px;color:var(--text-dim);font-weight:600;margin-bottom:3px}
+.area-stat-val{font-size:20px;font-weight:800;color:var(--text)}
+.area-stat-sub{font-size:9.5px;color:var(--text-faint);margin-top:2px}
+.area-format-note{font-size:10px;color:var(--text-faint);margin-bottom:14px;padding:8px 10px;background:var(--surface-2);border-radius:8px}
+.rank-badge{font-size:11px;font-weight:800;flex-shrink:0;width:20px;text-align:center}
 .alamat-row{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--border)}
 .alamat-row:last-child{border-bottom:none}
 .alamat-row.clickable{cursor:pointer}
@@ -315,6 +324,8 @@ select:focus,input[type=date]:focus{border-color:var(--y);box-shadow:0 0 0 3px r
             <div style="font-size:12px;color:var(--text-dim)">total leads dengan lokasi tercatat</div>
           </div>
           <div style="font-size:12px;color:var(--text-dim);margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)" id="alamatPct">—</div>
+          <div class="area-stat-row" id="areaTargetBox"></div>
+          <div class="area-format-note" id="areaFormatNote" style="display:none"></div>
           <div class="chart-box h200" style="margin-bottom:16px"><canvas id="kabupatenChart"></canvas></div>
           <div id="alamatList"></div>
         </div>
@@ -775,13 +786,59 @@ function render(rows,notes,tdk,activities){
     name:k, count:kabupatenMap[k].count, detail:kabupatenMap[k].detail
   })).sort((a,b)=>b.count-a.count);
 
+  // ── Target Area vs Luar Area ──────────────────────────
+  // Target utama: NGAWI, MAGETAN, MADIUN, BOJONEGORO. Dicocokkan pakai
+  // "mengandung kata" (bukan sama persis huruf-demi-huruf), biar variasi
+  // ketikan kayak "KAB NGAWI" atau "NGAWI KOTA" tetap kehitung benar.
+  // "FORMAT TIDAK STANDAR" SENGAJA dipisah — itu masalah data-entry,
+  // bukan fakta lokasi, jadi gak ikut diitung ke Target maupun Luar Area.
+  const TARGET_AREAS=['NGAWI','MAGETAN','MADIUN','BOJONEGORO'];
+  const isTargetArea=name=>TARGET_AREAS.some(area=>name.includes(area));
+  const kabForArea=kabupatenSorted.filter(k=>k.name!=='FORMAT TIDAK STANDAR');
+  const dalamAreaCount=kabForArea.filter(k=>isTargetArea(k.name)).reduce((s,k)=>s+k.count,0);
+  const luarAreaCount=kabForArea.filter(k=>!isTargetArea(k.name)).reduce((s,k)=>s+k.count,0);
+  const formatTidakStandarItem=kabupatenSorted.find(k=>k.name==='FORMAT TIDAK STANDAR');
+  const formatTidakStandarCount=formatTidakStandarItem?formatTidakStandarItem.count:0;
+  const areaBaseTotal=dalamAreaCount+luarAreaCount;
+
+  document.getElementById('areaTargetBox').innerHTML=`
+    <div class="area-stat-box target">
+      <div class="area-stat-lbl">🎯 Dalam Area Target</div>
+      <div class="area-stat-val">${dalamAreaCount}</div>
+      <div class="area-stat-sub">${areaBaseTotal>0?(dalamAreaCount/areaBaseTotal*100).toFixed(1):'0'}% · Ngawi/Magetan/Madiun/Bojonegoro</div>
+    </div>
+    <div class="area-stat-box luar">
+      <div class="area-stat-lbl">📍 Luar Area</div>
+      <div class="area-stat-val">${luarAreaCount}</div>
+      <div class="area-stat-sub">${areaBaseTotal>0?(luarAreaCount/areaBaseTotal*100).toFixed(1):'0'}% · selain 4 kabupaten target</div>
+    </div>`;
+  const formatNoteEl=document.getElementById('areaFormatNote');
+  if(formatTidakStandarCount>0){
+    formatNoteEl.style.display='block';
+    formatNoteEl.innerHTML=`ℹ️ <b>${formatTidakStandarCount}</b> leads punya format alamat tidak standar (gak jelas kabupatennya) — gak ikut dihitung ke Dalam/Luar Area di atas.`;
+  } else {
+    formatNoteEl.style.display='none';
+  }
+
   const alamatEl=document.getElementById('alamatList');
   if(kabupatenSorted.length===0){
     alamatEl.innerHTML='<div class="alamat-empty">Tidak ada data alamat pada periode ini.</div>';
     if(kabupatenChart){kabupatenChart.destroy();kabupatenChart=null;}
   }else{
     const maxCount=kabupatenSorted[0].count;
+    const RANK_ICONS=['🥇','🥈','🥉'];
+    // "FORMAT TIDAK STANDAR" gak ikut dapet ranking (bukan lokasi asli),
+    // jadi rank dihitung dari POSISI di antara kabupaten yang valid aja.
+    let rankCounter=0;
     alamatEl.innerHTML=kabupatenSorted.map((k,idx)=>{
+      const isValidKab=k.name!=='FORMAT TIDAK STANDAR';
+      let rankHtml='';
+      if(isValidKab){
+        if(rankCounter<5){
+          rankHtml=`<div class="rank-badge">${RANK_ICONS[rankCounter]||('#'+(rankCounter+1))}</div>`;
+        }
+        rankCounter++;
+      }
       const pct=alamatTotalCount>0?(k.count/alamatTotalCount*100):0;
       const detailSorted=Object.keys(k.detail).map(dk=>({name:dk,count:k.detail[dk]})).sort((a,b)=>b.count-a.count);
       const maxDetail=detailSorted[0]?detailSorted[0].count:1;
@@ -794,6 +851,7 @@ function render(rows,notes,tdk,activities){
       return `
       <div class="alamat-row clickable" onclick="toggleKabupatenDetail(${idx})">
         <div class="alamat-caret" id="kabCaret${idx}">▶</div>
+        ${rankHtml}
         <div class="alamat-name">${escHtml(k.name)}</div>
         <div class="alamat-bar-wrap"><div class="alamat-bar" style="width:${(k.count/maxCount*100).toFixed(0)}%"></div></div>
         <div class="alamat-pct-tag">${pct.toFixed(1)}%</div>
