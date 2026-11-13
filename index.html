@@ -311,23 +311,6 @@ select:focus,input[type=date]:focus{border-color:var(--y);box-shadow:0 0 0 3px r
         </div>
       </div>
 
-      <!-- SEBARAN LOKASI LEADS -->
-      <div class="section">
-        <div class="card">
-          <div class="card-title">Sebaran Lokasi Leads</div>
-          <div class="card-desc">Dikelompokkan per Kabupaten dari format "Desa/Kecamatan, Kabupaten" — klik salah satu buat lihat breakdown desa/kecamatannya</div>
-          <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px;padding-bottom:10px">
-            <div style="font-size:28px;font-weight:800;color:var(--text)" id="alamatTotal">—</div>
-            <div style="font-size:12px;color:var(--text-dim)">total leads dengan lokasi tercatat</div>
-          </div>
-          <div style="font-size:12px;color:var(--text-dim);margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)" id="alamatPct">—</div>
-          <div class="area-stat-row" id="areaTargetBox"></div>
-          <div class="area-format-note" id="areaFormatNote" style="display:none"></div>
-          <div class="chart-box h200" style="margin-bottom:16px"><canvas id="kabupatenChart"></canvas></div>
-          <div id="alamatList"></div>
-        </div>
-      </div>
-
       <!-- TRAFFIC -->
       <div class="section">
         <div class="card">
@@ -349,6 +332,23 @@ select:focus,input[type=date]:focus{border-color:var(--y);box-shadow:0 0 0 3px r
           <div class="bd-bar" id="bdBar"></div>
           <div class="bd-grid" id="bdGrid"></div>
           <div class="area-format-note" id="trafficNote" style="display:none;margin:14px 0 0"></div>
+        </div>
+      </div>
+
+      <!-- SEBARAN LOKASI LEADS -->
+      <div class="section">
+        <div class="card">
+          <div class="card-title">Sebaran Lokasi Leads</div>
+          <div class="card-desc">Dikelompokkan per Kabupaten dari format "Desa/Kecamatan, Kabupaten" — klik salah satu buat lihat breakdown desa/kecamatannya</div>
+          <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px;padding-bottom:10px">
+            <div style="font-size:28px;font-weight:800;color:var(--text)" id="alamatTotal">—</div>
+            <div style="font-size:12px;color:var(--text-dim)">total leads dengan lokasi tercatat</div>
+          </div>
+          <div style="font-size:12px;color:var(--text-dim);margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)" id="alamatPct">—</div>
+          <div class="area-stat-row" id="areaTargetBox"></div>
+          <div class="area-format-note" id="areaFormatNote" style="display:none"></div>
+          <div class="chart-box h200" style="margin-bottom:16px"><canvas id="kabupatenChart"></canvas></div>
+          <div id="alamatList"></div>
         </div>
       </div>
 
