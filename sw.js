@@ -6,7 +6,7 @@
 // PENTING: dashboard ini live — datanya selalu ditarik dari Google
 // Sheets tiap dibuka. Data TIDAK di-cache di sini supaya selalu fresh.
 
-const CACHE = 'cs-toko-v10';
+const CACHE = 'cs-toko-v11';
 
 self.addEventListener('install', function (e) {
   e.waitUntil(

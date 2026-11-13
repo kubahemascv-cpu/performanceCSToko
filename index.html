@@ -292,9 +292,9 @@ select:focus,input[type=date]:focus{border-color:var(--y);box-shadow:0 0 0 3px r
             <span class="kpi-badge" id="k-close-badge"></span>
           </div>
           <div class="kpi-card">
-            <div class="kpi-label">FU Review Google</div>
-            <div class="kpi-val" id="k-fur">—</div>
-            <div class="kpi-sub">total follow-up review bulan ini</div>
+            <div class="kpi-label">Rata-rata Pembelian / Hari</div>
+            <div class="kpi-val" id="k-avgbeli">—</div>
+            <div class="kpi-sub" id="k-avgbeli-sub">nota per hari aktif (tab REPORT)</div>
           </div>
         </div>
         <div class="area-format-note" id="monthWarn" style="display:none;margin:12px 0 0"></div>
@@ -393,10 +393,10 @@ const SHEET_TDK='Database TDK';
 
 const REPORT_SPREADSHEET_ID='1n9Mp66i3JwJE6hdV3jevhOw8EOa1b7Lo8FvBegtsTo4';
 const SHEET_REPORT='REPORT';
-const REPORT_RANGE='A62:B73'; // kolom A=Bulan, B=Nota (Januari..Desember)
+const REPORT_RANGE='A62:D73'; // A=Bulan, B=Nota, C=Hari Aktif, D=Rata-rata nota/hari (Januari..Desember; baris 61 = header, tidak dibaca)
 const MONTHS=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 
-let summaryRows=[],logNotes=[],tdkLeads=[],chatChart=null,problemChart=null,kabupatenChart=null,pembelianByMonth=null,reportError='';
+let summaryRows=[],logNotes=[],tdkLeads=[],chatChart=null,problemChart=null,kabupatenChart=null,pembelianByMonth=null,rataBeliByMonth=null,reportError='';
 
 /* ---------- FETCH VIA JSONP (gviz CSV export tidak kirim header CORS,
    jadi fetch() biasa akan selalu gagal walau sheet sudah public.
@@ -435,7 +435,11 @@ function gvizTableToRows(table){
     if(cell.v!==undefined && cell.v!==null) return String(cell.v);
     return '';
   }));
-  return [headers,...dataRows];
+  // nilai mentah (angka asli, sebelum dibulatkan format sel) disimpan terpisah
+  const rawRows=(table.rows||[]).map(r=>(r.c||[]).map(cell=>(cell&&cell.v!==undefined&&cell.v!==null)?cell.v:null));
+  const out=[headers,...dataRows];
+  out.raw=[null,...rawRows];
+  return out;
 }
 function colIdx(headers,...kws){
   const lower=headers.map(h=>(h||'').toLowerCase().trim());
@@ -504,7 +508,7 @@ function downloadCSV(){
     lines.push(q('  Leads Offline (AD)')+','+mo.ad);
     lines.push(q('Jumlah Pembelian')+','+val(mo.beli));
     lines.push(q('Closing Rate')+','+(mo.closing===null?'':q(mo.closing.toFixed(1)+'%'+(mo.partial?' (BELUM VALID: traffic belum sebulan penuh)':''))));
-    lines.push(q('FU Review Google')+','+mo.fur);
+    lines.push(q('Rata-rata Pembelian per Hari')+','+(mo.avgBeli===null?'':q(String(+mo.avgBeli.toFixed(1)).replace('.',','))));
     lines.push('');
   }
 
@@ -562,9 +566,10 @@ async function loadData(manual){
     ]);
 
     // ---- Jumlah Pembelian per bulan (tab REPORT, A62:B73) ----
-    pembelianByMonth=null; reportError='';
+    pembelianByMonth=null; rataBeliByMonth=null; reportError='';
     if(repRes.ok){
       const out=new Array(12).fill(null);
+      const outAvg=new Array(12).fill(null);
       repRes.ok.slice(1).forEach((r,i)=>{
         const name=(r[0]||'').trim().toLowerCase();
         let m=MONTHS.findIndex(x=>x.toLowerCase()===name);
@@ -572,8 +577,17 @@ async function loadData(manual){
         if(m<0||m>11) return;
         const raw=(r[1]||'').trim();
         out[m]=raw===''?null:num(raw);
+        // Rata-rata Pembelian per Hari = kolom D. Pakai angka mentah supaya
+        // desimalnya tidak hilang (sel di sheet tampil dibulatkan, mis. 16,5 -> 17).
+        const rawD=repRes.ok.raw&&repRes.ok.raw[i+1]?repRes.ok.raw[i+1][3]:null;
+        const fD=(r[3]||'').trim();
+        let avg=null;
+        if(typeof rawD==='number' && isFinite(rawD)) avg=rawD;
+        else if(fD!=='' && /\d/.test(fD) && !/^#/.test(fD)) avg=num(fD.replace(',','.'));
+        const hari=(r[2]||'').trim();
+        outAvg[m]={avg,hari:hari===''?null:num(hari)};
       });
-      pembelianByMonth=out;
+      pembelianByMonth=out; rataBeliByMonth=outAvg;
     } else reportError=(repRes.err&&repRes.err.message)||'tidak diketahui';
 
     // ---- Parse Ringkasan Harian ----
@@ -739,9 +753,9 @@ function renderMonthCards(){
   if(!sel.value || !summaryRows.length) return;
   const key=+sel.value, y=Math.floor(key/100), m=key%100;
   const rows=summaryRows.filter(r=>r.date.getFullYear()===y && r.date.getMonth()===m);
-  let sv=0,sy=0,sad=0,fur=0,tDays=0,firstT=null;
+  let sv=0,sy=0,sad=0,tDays=0,firstT=null;
   rows.forEach(r=>{
-    sv+=r.v||0; sy+=r.y||0; sad+=r.ad||0; fur+=r.fur;
+    sv+=r.v||0; sy+=r.y||0; sad+=r.ad||0;
     if(r.hasTraffic){ tDays++; if(!firstT) firstT=r.date; }
   });
   const traffic=sv+sy+sad;
@@ -776,7 +790,17 @@ function renderMonthCards(){
     document.getElementById('k-close-sub').textContent='Pembelian ÷ Traffic';
     closeBadge.textContent=''; closeBadge.className='kpi-badge';
   }
-  document.getElementById('k-fur').textContent=fmt(fur);
+  // Rata-rata Pembelian per Hari: kolom D tab REPORT (D62:D73), tahun berjalan saja
+  let avgBeli=null, hariAktif=null;
+  if(rataBeliByMonth && y===new Date().getFullYear() && rataBeliByMonth[m]){
+    avgBeli=rataBeliByMonth[m].avg; hariAktif=rataBeliByMonth[m].hari;
+  }
+  const avgFmt=(n)=>Number(n).toLocaleString('id-ID',{maximumFractionDigits:1});
+  document.getElementById('k-avgbeli').textContent=avgBeli===null?'—':avgFmt(avgBeli);
+  document.getElementById('k-avgbeli-sub').textContent=
+    reportError ? 'gagal baca tab REPORT'
+    : (avgBeli===null ? 'belum ada angka di tab REPORT'
+       : (beli!==null&&hariAktif ? `${fmt(beli)} nota ÷ ${fmt(hariAktif)} hari aktif` : 'nota per hari aktif (tab REPORT)'));
 
   const warn=[];
   if(rows.length && !hasT) warn.push('Belum ada data Traffic (kolom V, Y, AD) di sheet untuk bulan ini.');
@@ -787,7 +811,7 @@ function renderMonthCards(){
   wEl.innerHTML='ℹ️ '+warn.join('<br>ℹ️ ');
 
   MONTH_EXPORT={label:MONTHS[m]+' '+y,traffic:hasT?traffic:null,v:sv,y:sy,ad:sad,beli,
-    closing:(beli!==null&&hasT&&traffic>0)?(beli/traffic*100):null,partial,fur};
+    closing:(beli!==null&&hasT&&traffic>0)?(beli/traffic*100):null,partial,avgBeli,hariAktif};
 }
 
 /* ---------- RENDER (bagian yang ikut filter Periode) ---------- */
