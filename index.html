@@ -85,6 +85,7 @@ select:focus,input[type=date]:focus{border-color:var(--y);box-shadow:0 0 0 3px r
   #printHeader .ph-sub{font-size:11px;color:#555;margin-top:3px}
   body{background:#fff}
   .card,.kpi-card,.alert-card{box-shadow:none !important;border:1px solid #ddd !important;break-inside:avoid}
+  .month-bar select{display:none}
   .section{break-inside:avoid}
 }
 #customRange{display:none;align-items:center;gap:8px}
@@ -102,7 +103,7 @@ select:focus,input[type=date]:focus{border-color:var(--y);box-shadow:0 0 0 3px r
 .status-error ul{margin:6px 0 0 16px;line-height:1.6}
 
 .section{margin-bottom:22px}
-.kpi-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
 .kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow);transition:transform .2s}
 .kpi-card:hover{transform:translateY(-2px)}
 .kpi-label{font-size:11px;font-weight:500;color:var(--text-dim);margin-bottom:9px}
@@ -143,21 +144,11 @@ select:focus,input[type=date]:focus{border-color:var(--y);box-shadow:0 0 0 3px r
 .alamat-detail .alamat-row{padding:7px 0}
 .alamat-detail .alamat-name{font-size:11.5px;color:var(--text-dim)}
 
-.gap-row{padding:10px 0;border-bottom:1px solid var(--border)}
-.gap-row:last-child{border-bottom:none}
-.gap-name{font-size:12.5px;font-weight:600;color:var(--text);margin-bottom:6px}
-.gap-bar-wrap{display:flex;height:9px;border-radius:6px;overflow:hidden;background:var(--surface-2);margin-bottom:5px}
-.gap-bar-belum{height:100%;background:#DC2626}
-.gap-bar-kendala{height:100%;background:#D97706}
-.gap-legend{display:flex;gap:14px;font-size:10.5px;color:var(--text-dim)}
-.gap-legend b{color:var(--text)}
-.gap-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px}
-
-.catatan-list{max-height:280px;overflow-y:auto;margin-top:6px}
-.catatan-row{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--border);font-size:12px}
-.catatan-row:last-child{border-bottom:none}
-.catatan-date{flex-shrink:0;width:56px;color:var(--text-dim);font-weight:600}
-.catatan-text{color:var(--text);line-height:1.5}
+.bd-title{font-size:12.5px;font-weight:600;margin:22px 0 10px;padding-top:16px;border-top:1px solid var(--border)}
+.bd-bar{display:flex;height:10px;border-radius:6px;overflow:hidden;background:var(--surface-2);margin-bottom:12px}
+.bd-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.bd-box{background:var(--surface-2);border-radius:12px;padding:12px 14px;border:1px solid var(--border);border-left-width:3px}
+.month-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 
 .alert-card{background:linear-gradient(135deg,var(--charcoal),var(--charcoal-2));border:1px solid rgba(245,196,0,.25);border-radius:14px;padding:22px 24px;display:flex;align-items:center;gap:18px;box-shadow:var(--shadow)}
@@ -184,8 +175,12 @@ select:focus,input[type=date]:focus{border-color:var(--y);box-shadow:0 0 0 3px r
 .footer-note{text-align:center;color:var(--text-faint);font-size:10.5px;padding:30px 0 0}
 .empty-note{font-size:12px;color:var(--text-faint);font-style:italic}
 
+@media (max-width:900px){
+  .kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
 @media (max-width:760px){
   .kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .bd-grid{grid-template-columns:1fr}
   .grid-2{grid-template-columns:1fr}
   .header,.body-pad,.page-title{padding-left:18px;padding-right:18px}
   .period-meta{margin-left:0;text-align:left;width:100%}
@@ -221,6 +216,8 @@ select:focus,input[type=date]:focus{border-color:var(--y);box-shadow:0 0 0 3px r
     <div class="period-bar">
       <label>Periode</label>
       <select id="periodSelect" onchange="onPeriodChange()">
+        <option value="today">Hari Ini</option>
+        <option value="yesterday">Kemarin</option>
         <option value="7">7 Hari Terakhir</option>
         <option value="14" selected>14 Hari Terakhir</option>
         <option value="30">30 Hari Terakhir</option>
@@ -258,7 +255,7 @@ select:focus,input[type=date]:focus{border-color:var(--y);box-shadow:0 0 0 3px r
         <span id="errorMsg">Koneksi gagal.</span>
         <ul>
           <li>Pastikan Sheet masih di-share minimal <b>"Anyone with the link — Viewer"</b>.</li>
-          <li>Pastikan nama tab di Sheet masih persis <b>"Log Aktivitas"</b>, <b>"Ringkasan Harian"</b>, dan tab <b>"Database TDK"</b> di spreadsheet leads (huruf besar/kecil & spasi berpengaruh).</li>
+          <li>Pastikan nama tab di Sheet masih persis <b>"Log Aktivitas"</b>, <b>"Ringkasan Harian"</b>, tab <b>"REPORT"</b> di spreadsheet penjualan, dan tab <b>"Database TDK"</b> di spreadsheet leads (huruf besar/kecil & spasi berpengaruh).</li>
           <li>Kalau baru saja ganti permission, tunggu 1-2 menit — kadang ada delay propagasi dari sisi Google.</li>
           <li>Cek koneksi internet, lalu klik tombol di bawah untuk coba lagi.</li>
         </ul>
@@ -268,41 +265,39 @@ select:focus,input[type=date]:focus{border-color:var(--y);box-shadow:0 0 0 3px r
 
     <div id="dashContent" style="display:none">
 
-      <!-- KPI ROW -->
+      <!-- KARTU BULANAN (tidak ikut filter Periode) -->
       <div class="section">
+        <div class="month-bar">
+          <div>
+            <div class="card-title" style="margin-bottom:0">Ringkasan Bulanan</div>
+            <div class="card-desc" style="margin-bottom:0">Dihitung per bulan — tidak ikut filter Periode di atas</div>
+          </div>
+          <select id="monthSelect" onchange="renderMonthCards()"></select>
+        </div>
         <div class="kpi-grid">
           <div class="kpi-card">
-            <div class="kpi-label">Total Leads Baru</div>
-            <div class="kpi-val" id="k-lead">—</div>
-            <div class="kpi-sub" id="k-lead-sub">selama periode terpilih</div>
+            <div class="kpi-label">Jumlah Traffic</div>
+            <div class="kpi-val" id="k-traffic">—</div>
+            <div class="kpi-sub" id="k-traffic-sub">—</div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-label">Arsip</div>
-            <div class="kpi-val" id="k-arsip">—</div>
-            <div class="kpi-sub">leads tidak lanjut &gt; H+7</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-label">Beli</div>
+            <div class="kpi-label">Jumlah Pembelian</div>
             <div class="kpi-val" id="k-beli">—</div>
-            <div class="kpi-sub">leads berlabel "BELI"</div>
+            <div class="kpi-sub" id="k-beli-sub">nota penjualan (tab REPORT)</div>
           </div>
           <div class="kpi-card">
-            <div class="kpi-label">Follow Up</div>
-            <div class="kpi-val" id="k-fu">—</div>
-            <div class="kpi-sub" id="k-fu-sub">FU 1 + FU 2 + FU 3</div>
+            <div class="kpi-label">Closing Rate</div>
+            <div class="kpi-val" id="k-close">—</div>
+            <div class="kpi-sub" id="k-close-sub">Pembelian ÷ Traffic</div>
+            <span class="kpi-badge" id="k-close-badge"></span>
           </div>
           <div class="kpi-card">
             <div class="kpi-label">FU Review Google</div>
             <div class="kpi-val" id="k-fur">—</div>
-            <div class="kpi-sub">total follow-up review periode ini</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-label">Rata-rata Kepatuhan Checklist</div>
-            <div class="kpi-val" id="k-chkcard">—</div>
-            <div class="kpi-sub" id="k-chkcard-sub">—</div>
-            <span class="kpi-badge" id="k-chkcard-badge"></span>
+            <div class="kpi-sub">total follow-up review bulan ini</div>
           </div>
         </div>
+        <div class="area-format-note" id="monthWarn" style="display:none;margin:12px 0 0"></div>
       </div>
 
       <!-- FU TUKANG -->
@@ -333,14 +328,14 @@ select:focus,input[type=date]:focus{border-color:var(--y);box-shadow:0 0 0 3px r
         </div>
       </div>
 
-      <!-- CHAT MASUK -->
+      <!-- TRAFFIC -->
       <div class="section">
         <div class="card">
-          <div class="card-title">Chat Masuk</div>
-          <div class="card-desc">Tren harian selama periode terpilih</div>
+          <div class="card-title">Traffic</div>
+          <div class="card-desc" id="trafficDesc">Chat New Leads + Chat Existing Leads + Leads Offline — tren harian periode terpilih</div>
           <div style="display:flex;gap:28px;margin-bottom:16px;flex-wrap:wrap">
             <div>
-              <div class="kpi-label" style="margin-bottom:4px">Jumlah Chat Masuk</div>
+              <div class="kpi-label" style="margin-bottom:4px">Jumlah Traffic</div>
               <div class="kpi-val" style="font-size:24px" id="k-chat-total">—</div>
             </div>
             <div>
@@ -349,6 +344,11 @@ select:focus,input[type=date]:focus{border-color:var(--y);box-shadow:0 0 0 3px r
             </div>
           </div>
           <div class="chart-box h220"><canvas id="chatChart"></canvas></div>
+
+          <div class="bd-title">Breakdown Traffic</div>
+          <div class="bd-bar" id="bdBar"></div>
+          <div class="bd-grid" id="bdGrid"></div>
+          <div class="area-format-note" id="trafficNote" style="display:none;margin:14px 0 0"></div>
         </div>
       </div>
 
@@ -365,33 +365,6 @@ select:focus,input[type=date]:focus{border-color:var(--y);box-shadow:0 0 0 3px r
             <div class="card-desc">Frekuensi disebut di catatan harian, periode terpilih</div>
             <div class="chart-box h200"><canvas id="problemChart"></canvas></div>
           </div>
-        </div>
-      </div>
-
-      <!-- CHECKLIST YANG SERING TERLEWAT -->
-      <div class="section">
-        <div class="card">
-          <div class="card-title">Checklist yang Sering Terlewat</div>
-          <div class="card-desc">Bongkar dari persentase Kepatuhan Checklist di atas — tugas mana spesifiknya yang paling sering BELUM/KENDALA, periode terpilih (Sheet "Log Aktivitas")</div>
-          <div id="checklistGapList"></div>
-        </div>
-      </div>
-
-      <!-- CATATAN KOLOM H (mentah, per periode) -->
-      <div class="section">
-        <div class="card">
-          <div class="card-title">Catatan Harian (Kolom H — Sheet "Log Aktivitas")</div>
-          <div class="card-desc">Isi kolom Catatan apa adanya, selama periode terpilih</div>
-          <div class="catatan-list" id="catatanList"></div>
-        </div>
-      </div>
-
-      <!-- CATATAN UMUM -->
-      <div class="section">
-        <div class="card">
-          <div class="card-title">Catatan Umum</div>
-          <div class="card-desc">Rangkuman otomatis dari catatan harian admin, periode terpilih</div>
-          <p style="font-size:12.5px;line-height:1.75" id="catatanUmum"></p>
         </div>
       </div>
 
@@ -417,12 +390,17 @@ const SHEET_SUMMARY='Ringkasan Harian';
 const TDK_SPREADSHEET_ID='1k8gxOxuiwghZW6ldkXrrvHpOD7zOau9zgWfypJL0DNs';
 const SHEET_TDK='Database TDK';
 
-let summaryRows=[],logNotes=[],logActivities=[],tdkLeads=[],chatChart=null,problemChart=null,kabupatenChart=null;
+const REPORT_SPREADSHEET_ID='1n9Mp66i3JwJE6hdV3jevhOw8EOa1b7Lo8FvBegtsTo4';
+const SHEET_REPORT='REPORT';
+const REPORT_RANGE='A62:B73'; // kolom A=Bulan, B=Nota (Januari..Desember)
+const MONTHS=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+
+let summaryRows=[],logNotes=[],tdkLeads=[],chatChart=null,problemChart=null,kabupatenChart=null,pembelianByMonth=null,reportError='';
 
 /* ---------- FETCH VIA JSONP (gviz CSV export tidak kirim header CORS,
    jadi fetch() biasa akan selalu gagal walau sheet sudah public.
    JSONP pakai <script> tag, yang tidak tunduk pada aturan CORS) ---------- */
-function fetchSheetJSONP(sheetName,spreadsheetId){
+function fetchSheetJSONP(sheetName,spreadsheetId,range){
   const ssId=spreadsheetId||SPREADSHEET_ID;
   return new Promise((resolve,reject)=>{
     const cbName='gvizCb_'+Math.random().toString(36).slice(2);
@@ -442,7 +420,7 @@ function fetchSheetJSONP(sheetName,spreadsheetId){
       resolve(gvizTableToRows(resp.table));
     };
     const script=document.createElement('script');
-    script.src=`https://docs.google.com/spreadsheets/d/${ssId}/gviz/tq?tqx=out:json;responseHandler:${cbName}&sheet=${encodeURIComponent(sheetName)}`;
+    script.src=`https://docs.google.com/spreadsheets/d/${ssId}/gviz/tq?tqx=out:json;responseHandler:${cbName}&sheet=${encodeURIComponent(sheetName)}${range?'&range='+encodeURIComponent(range)+'&headers=0':''}`;
     script.onerror=()=>{cleanup();reject(new Error(`Gagal load sheet "${sheetName}" — cek nama tab masih sama & sharing masih "Anyone with the link".`));};
     document.head.appendChild(script);
   });
@@ -508,25 +486,39 @@ function downloadCSV(){
   document.getElementById('dlMenu').classList.remove('open');
   if(!EXPORT_DATA){ alert('Data belum dimuat / kosong untuk periode ini.'); return; }
   const q = (s) => '"'+String(s==null?'':s).replace(/"/g,'""')+'"';
+  const val = (x) => (x===null||x===undefined) ? '' : x;
   const lines = [];
 
   lines.push(q('LAPORAN PERFORMA CS TOKO — KUBAH EMAS'));
   lines.push(q('Periode')+','+q(EXPORT_DATA.periodLabel.replace(/<[^>]+>/g,'')));
   lines.push('');
 
-  lines.push(q('RINGKASAN KPI'));
+  const mo = MONTH_EXPORT;
+  if(mo){
+    lines.push(q('RINGKASAN BULANAN — '+mo.label+' (tidak ikut filter periode)'));
+    lines.push(q('Metrik')+','+q('Nilai'));
+    lines.push(q('Jumlah Traffic')+','+val(mo.traffic));
+    lines.push(q('  Chat New Leads (V)')+','+mo.v);
+    lines.push(q('  Chat Existing Leads (Y)')+','+mo.y);
+    lines.push(q('  Leads Offline (AD)')+','+mo.ad);
+    lines.push(q('Jumlah Pembelian')+','+val(mo.beli));
+    lines.push(q('Closing Rate')+','+(mo.closing===null?'':q(mo.closing.toFixed(1)+'%'+(mo.partial?' (BELUM VALID: traffic belum sebulan penuh)':''))));
+    lines.push(q('FU Review Google')+','+mo.fur);
+    lines.push('');
+  }
+
+  const p = EXPORT_DATA.period;
+  lines.push(q('RINGKASAN PERIODE TERPILIH'));
   lines.push(q('Metrik')+','+q('Nilai'));
-  const k = EXPORT_DATA.kpi;
-  lines.push(q('Total Leads Baru')+','+k.totalLead);
-  lines.push(q('Arsip')+','+k.arsipCount);
-  lines.push(q('Beli')+','+k.beliCount);
-  lines.push(q('Follow Up')+','+k.fuCount);
-  lines.push(q('FU Review Google')+','+k.totalFur);
-  lines.push(q('Leads Bermasalah')+','+k.totalBm+' ('+k.bmRate.toFixed(1)+'%)');
-  lines.push(q('FU Tukang')+','+k.totalFut);
-  lines.push(q('Chat Masuk (Total)')+','+k.totalChat);
-  lines.push(q('Chat Masuk (Rata-rata/Hari)')+','+Math.round(k.chatAvg));
-  lines.push(q('Kepatuhan Checklist (Rata-rata)')+','+k.chkAvg.toFixed(0)+'%');
+  lines.push(q('Traffic (Total)')+','+val(p.traffic));
+  lines.push(q('Traffic (Rata-rata/Hari)')+','+(p.avg===null?'':Math.round(p.avg)));
+  lines.push(q('  Chat New Leads (V)')+','+p.v);
+  lines.push(q('  Chat Existing Leads (Y)')+','+p.y);
+  lines.push(q('  Leads Offline (AD)')+','+p.ad);
+  lines.push(q('Total Leads Baru')+','+p.totalLead);
+  lines.push(q('Leads Bermasalah')+','+p.totalBm+' ('+p.bmRate.toFixed(1)+'%)');
+  lines.push(q('FU Tukang')+','+p.totalFut);
+  lines.push(q('Kepatuhan Checklist (Rata-rata)')+','+p.chkAvg.toFixed(0)+'%');
   lines.push('');
 
   lines.push(q('SEBARAN LOKASI PER KABUPATEN'));
@@ -536,35 +528,9 @@ function downloadCSV(){
     const pct = totalAlamat>0 ? (x.count/totalAlamat*100).toFixed(1) : '0';
     lines.push(q(x.name)+','+x.count+','+q(pct+'%'));
   });
-  lines.push('');
 
-  lines.push(q('CHECKLIST YANG SERING TERLEWAT'));
-  lines.push(q('Nama Tugas')+','+q('Belum')+','+q('Kendala')+','+q('Total'));
-  if(EXPORT_DATA.checklistGap.length===0){
-    lines.push(q('Semua checklist tercatat SELESAI pada periode ini')+',,,');
-  } else {
-    EXPORT_DATA.checklistGap.forEach(function(g){
-      lines.push(q(g.nama)+','+g.belum+','+g.kendala+','+g.total);
-    });
-  }
-  lines.push('');
-
-  lines.push(q('CATATAN HARIAN'));
-  lines.push(q('Tanggal')+','+q('Catatan'));
-  if(EXPORT_DATA.catatanHarian.length===0){
-    lines.push(q('Tidak ada catatan pada periode ini')+',');
-  } else {
-    EXPORT_DATA.catatanHarian.forEach(function(n){
-      lines.push(q(dlabel(n.date))+','+q(n.note));
-    });
-  }
-  lines.push('');
-
-  lines.push(q('CATATAN UMUM (Rangkuman Otomatis)'));
-  lines.push(q(EXPORT_DATA.catatanUmum.replace(/<[^>]+>/g,'')));
-
-  // \uFEFF (BOM) di depan biar Excel baca karakter Indonesia (é, dst) dengan benar
-  const blob = new Blob(['\uFEFF'+lines.join('\r\n')], {type:'text/csv;charset=utf-8;'});
+  // ﻿ (BOM) di depan biar Excel baca karakter Indonesia (é, dst) dengan benar
+  const blob = new Blob(['﻿'+lines.join('\r\n')], {type:'text/csv;charset=utf-8;'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -584,42 +550,59 @@ async function loadData(manual){
   btn.disabled=true;
 
   try{
-    const [logRows,sumRows,tdkRows]=await Promise.all([
+    const [logRows,sumRows,tdkRows,repRes]=await Promise.all([
       fetchSheetJSONP(SHEET_LOG),
       fetchSheetJSONP(SHEET_SUMMARY),
-      fetchSheetJSONP(SHEET_TDK,TDK_SPREADSHEET_ID)
+      fetchSheetJSONP(SHEET_TDK,TDK_SPREADSHEET_ID),
+      // tab REPORT dipisah: kalau gagal, dashboard tetap jalan (Pembelian jadi "—")
+      fetchSheetJSONP(SHEET_REPORT,REPORT_SPREADSHEET_ID,REPORT_RANGE).then(r=>({ok:r}),e=>({err:e}))
     ]);
+
+    // ---- Jumlah Pembelian per bulan (tab REPORT, A62:B73) ----
+    pembelianByMonth=null; reportError='';
+    if(repRes.ok){
+      const out=new Array(12).fill(null);
+      repRes.ok.slice(1).forEach((r,i)=>{
+        const name=(r[0]||'').trim().toLowerCase();
+        let m=MONTHS.findIndex(x=>x.toLowerCase()===name);
+        if(m<0) m=i;
+        if(m<0||m>11) return;
+        const raw=(r[1]||'').trim();
+        out[m]=raw===''?null:num(raw);
+      });
+      pembelianByMonth=out;
+    } else reportError=(repRes.err&&repRes.err.message)||'tidak diketahui';
 
     // ---- Parse Ringkasan Harian ----
     const sh=sumRows[0];
-    const iDate=colIdx(sh,'tanggal'), iChat=colIdx(sh,'total chat'), iJwb=colIdx(sh,'chat terjawab'),
+    const pick=(kw,fallback)=>{const i=colIdx(sh,kw);return i>=0?i:fallback;};
+    const iDate=colIdx(sh,'tanggal'),
           iLead=colIdx(sh,'leads baru'), iFur=colIdx(sh,'fu review'), iFut=colIdx(sh,'fu tukang'),
           iBm=colIdx(sh,'leads bermasalah','bermasalah'), iChk=colIdx(sh,'checklist');
+    // Traffic = V + Y + AD. Dicari lewat nama header; kalau header gak kebaca, pakai posisi kolom tetap.
+    const iV=pick('chat new leads',21), iY=pick('chat existing leads',24), iAD=pick('leads offline',29);
+    const nn=(x)=>{ if(x===undefined||x===null) return null; const s=String(x).trim(); if(s===''||s==='-') return null; return num(s); };
     summaryRows=sumRows.slice(1).map(r=>{
       const d=parseDateFlex(r[iDate]);
       if(!d) return null;
+      const cv=nn(r[iV]), cy=nn(r[iY]), cad=nn(r[iAD]);
+      const hasTraffic=(cv!==null||cy!==null||cad!==null);
       return{date:d,key:dkey(d),label:dlabel(d),
-        chat:num(r[iChat]),jwb:num(r[iJwb]),lead:num(r[iLead]),
+        v:cv,y:cy,ad:cad,hasTraffic,traffic:(cv||0)+(cy||0)+(cad||0),
+        lead:num(r[iLead]),
         fur:num(r[iFur]),fut:num(r[iFut]),bm:num(r[iBm]),chk:num(r[iChk])};
     }).filter(Boolean).sort((a,b)=>a.date-b.date);
 
-    // ---- Parse Log Aktivitas (catatan + status tiap tugas checklist) ----
+    // ---- Catatan harian (hanya dipakai buat hitung "Kategori Leads Bermasalah") ----
     const lh=logRows[0];
-    const jDate=colIdx(lh,'tanggal'), jCatatan=colIdx(lh,'catatan'),
-          jAktivitas=colIdx(lh,'aktivitas'), jStatus=colIdx(lh,'status');
+    const jDate=colIdx(lh,'tanggal'), jCatatan=colIdx(lh,'catatan');
     logNotes=logRows.slice(1).map(r=>{
       const d=parseDateFlex(r[jDate]); const note=(r[jCatatan]||'').trim();
       if(!d||!note) return null;
       return{date:d,key:dkey(d),note};
     }).filter(Boolean);
-    logActivities=logRows.slice(1).map(r=>{
-      const d=parseDateFlex(r[jDate]); const aktivitas=(r[jAktivitas]||'').trim();
-      const status=(r[jStatus]||'').trim().toUpperCase();
-      if(!d||!aktivitas||!status) return null;
-      return{date:d,key:dkey(d),aktivitas,status};
-    }).filter(Boolean);
 
-    // ---- Parse Database TDK (Arsip/Beli/Follow Up/Alamat) ----
+    // ---- Parse Database TDK (dipakai buat Sebaran Lokasi Leads) ----
     // Sheet-nya berisi beberapa tabel bertumpuk dalam 1 tab (data lama,
     // dashboard ringkasan, data baru, dsb) dengan banyak baris merged/
     // template. Header per-blok gak konsisten posisinya, jadi dipakai
@@ -632,12 +615,7 @@ async function loadData(manual){
       const kode=(r[1]||'').trim();
       const d=parseDateFlex(r[5]);
       if(!kode || kode.toLowerCase()==='kode unik' || !d) return null;
-      return{
-        date:d, key:dkey(d),
-        alamat:(r[4]||'').trim(),
-        status:(r[10]||'').trim(),
-        label:(r[8]||'').trim().toUpperCase(),
-      };
+      return{ date:d, key:dkey(d), alamat:(r[4]||'').trim() };
     }).filter(Boolean);
 
     if(summaryRows.length===0) throw new Error('Data "Ringkasan Harian" kosong atau format kolom tidak terbaca.');
@@ -648,6 +626,8 @@ async function loadData(manual){
       'Dashboard Admin/CS — Kubah Emas • Live dari Google Sheets "CS Toko v2" • Terakhir dimuat: '+new Date().toLocaleTimeString('id-ID');
 
     setDefaultDateInputs();
+    populateMonths();
+    renderMonthCards();
     applyPeriod();
 
   }catch(err){
@@ -676,20 +656,21 @@ function applyPeriod(){
   if(!summaryRows.length)return;
   const v=document.getElementById('periodSelect').value;
   const maxDate=summaryRows[summaryRows.length-1].date;
-  let from,to;
-  if(v==='all'){ from=summaryRows[0].date; to=maxDate; }
+  const now=new Date();
+  const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  let from,to,single=false,periodName='';
+  if(v==='today'){ from=to=today; single=true; periodName='Hari Ini'; }
+  else if(v==='yesterday'){ from=to=new Date(today.getFullYear(),today.getMonth(),today.getDate()-1); single=true; periodName='Kemarin'; }
+  else if(v==='all'){ from=summaryRows[0].date; to=maxDate; }
   else if(v==='month'){
-    const now=new Date();
     from=new Date(now.getFullYear(),now.getMonth(),1);
     to=maxDate;
   }
   else if(v==='lastmonth'){
-    const now=new Date();
     from=new Date(now.getFullYear(),now.getMonth()-1,1);
     to=new Date(now.getFullYear(),now.getMonth(),0); // hari terakhir bulan lalu
   }
   else if(v==='2monthsago'){
-    const now=new Date();
     from=new Date(now.getFullYear(),now.getMonth()-2,1);
     to=new Date(now.getFullYear(),now.getMonth()-1,0); // hari terakhir 2 bulan lalu
   }
@@ -702,57 +683,166 @@ function applyPeriod(){
   }
   const filteredSummary=summaryRows.filter(r=>r.date>=from && r.date<=to);
   const filteredNotes=logNotes.filter(r=>r.date>=from && r.date<=to);
-  const filteredActivities=logActivities.filter(r=>r.date>=from && r.date<=to);
   const filteredTdk=tdkLeads.filter(r=>r.date>=from && r.date<=to);
 
-  document.getElementById('periodMeta').innerHTML=
-    `Menampilkan <b>${filteredSummary.length} hari tercatat</b> &nbsp;(${dlabel(from)} — ${dlabel(to)})`;
+  // Mode 1 hari: grafik tetap nunjukin 7 hari sampai tanggal itu (1 titik doang gak kebaca)
+  let chartRows=filteredSummary;
+  if(single){
+    const cf=new Date(from); cf.setDate(cf.getDate()-6);
+    chartRows=summaryRows.filter(r=>r.date>=cf && r.date<=to);
+  }
+  document.getElementById('trafficDesc').textContent = single
+    ? `Angka di atas = ${periodName.toLowerCase()} saja · grafik = 7 hari sampai ${dlabel(to)}`
+    : 'Chat New Leads + Chat Existing Leads + Leads Offline — tren harian periode terpilih';
 
-  render(filteredSummary,filteredNotes,filteredTdk,filteredActivities);
+  document.getElementById('periodMeta').innerHTML = single
+    ? (filteredSummary.length
+        ? `Menampilkan <b>${periodName}</b> &nbsp;(${dlabel(from)})`
+        : `<b>${periodName}</b> (${dlabel(from)}) — belum ada rekap`)
+    : `Menampilkan <b>${filteredSummary.length} hari tercatat</b> &nbsp;(${dlabel(from)} — ${dlabel(to)})`;
+
+  render(filteredSummary,filteredNotes,filteredTdk,chartRows,single,periodName);
 }
 
-/* ---------- RENDER ---------- */
-function render(rows,notes,tdk,activities){
+function fmt(n){ return Number(n).toLocaleString('id-ID'); }
+
+/* ---------- KARTU ATAS: PER BULAN (tidak ikut filter Periode) ---------- */
+let MONTH_EXPORT=null;
+function populateMonths(){
+  const sel=document.getElementById('monthSelect');
+  const prev=sel.value;
+  const keys=[...new Set(summaryRows.map(r=>r.date.getFullYear()*100+r.date.getMonth()))].sort((a,b)=>b-a);
+  sel.innerHTML=keys.map(k=>`<option value="${k}">${MONTHS[k%100]} ${Math.floor(k/100)}</option>`).join('');
+  const now=new Date(); const curKey=now.getFullYear()*100+now.getMonth();
+  if(prev && keys.includes(+prev)) sel.value=prev;
+  else sel.value=String(keys.includes(curKey)?curKey:keys[0]);
+}
+function renderMonthCards(){
+  const sel=document.getElementById('monthSelect');
+  if(!sel.value || !summaryRows.length) return;
+  const key=+sel.value, y=Math.floor(key/100), m=key%100;
+  const rows=summaryRows.filter(r=>r.date.getFullYear()===y && r.date.getMonth()===m);
+  let sv=0,sy=0,sad=0,fur=0,tDays=0,firstT=null;
+  rows.forEach(r=>{
+    sv+=r.v||0; sy+=r.y||0; sad+=r.ad||0; fur+=r.fur;
+    if(r.hasTraffic){ tDays++; if(!firstT) firstT=r.date; }
+  });
+  const traffic=sv+sy+sad;
+  const hasT=tDays>0;
+
+  document.getElementById('k-traffic').textContent=hasT?fmt(traffic):'—';
+  document.getElementById('k-traffic-sub').textContent=hasT
+    ? `New ${fmt(sv)} · Existing ${fmt(sy)} · Offline ${fmt(sad)}`
+    : 'belum ada data traffic bulan ini';
+
+  // Jumlah Pembelian: dari tab REPORT (A62:B73). Tab ini 1 tahun saja
+  // (tanpa kolom tahun), jadi hanya dipakai untuk bulan di tahun berjalan.
+  let beli=null;
+  if(pembelianByMonth && y===new Date().getFullYear()) beli=pembelianByMonth[m];
+  document.getElementById('k-beli').textContent=beli===null?'—':fmt(beli);
+  document.getElementById('k-beli-sub').textContent=
+    reportError ? 'gagal baca tab REPORT'
+    : (beli===null ? 'belum ada angka di tab REPORT' : 'nota penjualan (tab REPORT)');
+
+  // Closing Rate = Jumlah Pembelian ÷ Jumlah Traffic
+  const partial=hasT && tDays<rows.length;
+  const closeEl=document.getElementById('k-close');
+  const closeBadge=document.getElementById('k-close-badge');
+  if(beli!==null && hasT && traffic>0){
+    closeEl.textContent=((beli/traffic)*100).toFixed(1)+'%';
+    closeEl.style.opacity=partial?'.45':'1';
+    document.getElementById('k-close-sub').textContent=`${fmt(beli)} pembelian ÷ ${fmt(traffic)} traffic`;
+    if(partial) setBadge('k-close-badge',['Belum valid','warn']);
+    else { closeBadge.textContent=''; closeBadge.className='kpi-badge'; }
+  } else {
+    closeEl.textContent='—'; closeEl.style.opacity='1';
+    document.getElementById('k-close-sub').textContent='Pembelian ÷ Traffic';
+    closeBadge.textContent=''; closeBadge.className='kpi-badge';
+  }
+  document.getElementById('k-fur').textContent=fmt(fur);
+
+  const warn=[];
+  if(rows.length && !hasT) warn.push('Belum ada data Traffic (kolom V, Y, AD) di sheet untuk bulan ini.');
+  if(partial) warn.push(`Data Traffic di sheet baru terisi sejak <b>${dlabel(firstT)}</b> — ${tDays} dari ${rows.length} hari rekap bulan ini. Jumlah Pembelian dihitung sebulan penuh, jadi <b>Closing Rate belum valid</b> sampai Traffic terisi penuh sebulan.`);
+  if(reportError) warn.push('Tab REPORT gagal dibaca: '+escHtml(reportError));
+  const wEl=document.getElementById('monthWarn');
+  wEl.style.display=warn.length?'block':'none';
+  wEl.innerHTML='ℹ️ '+warn.join('<br>ℹ️ ');
+
+  MONTH_EXPORT={label:MONTHS[m]+' '+y,traffic:hasT?traffic:null,v:sv,y:sy,ad:sad,beli,
+    closing:(beli!==null&&hasT&&traffic>0)?(beli/traffic*100):null,partial,fur};
+}
+
+/* ---------- RENDER (bagian yang ikut filter Periode) ---------- */
+function render(rows,notes,tdk,chartRows,single,periodName){
+  const BD=['bdBar','bdGrid'];
   if(!rows.length){
     EXPORT_DATA = null;
-    document.getElementById('k-lead').textContent='0';
-    ['k-arsip','k-beli','k-fu','k-chkcard','k-fur','k-chat-total','k-chat-avg','k-chk-avg'].forEach(id=>document.getElementById(id).textContent='—');
-    document.getElementById('catatanUmum').innerHTML='<span class="empty-note">Tidak ada data untuk periode ini.</span>';
+    ['k-chat-total','k-chat-avg','k-chk-avg'].forEach(id=>document.getElementById(id).textContent='—');
+    BD.forEach(id=>document.getElementById(id).innerHTML='');
+    const msg = single
+      ? `Belum ada rekap harian untuk <b>${periodName}</b>. Rekap CS biasanya masuk sekitar jam 16:00, dan hari Minggu tidak ada rekap.`
+      : 'Tidak ada data untuk periode ini.';
+    const tn=document.getElementById('trafficNote'); tn.style.display='block'; tn.innerHTML=msg;
     document.getElementById('alamatTotal').textContent='0';
     document.getElementById('alamatPct').textContent='—';
-    document.getElementById('alamatList').innerHTML='<div class="alamat-empty">Tidak ada data untuk periode ini.</div>';
+    document.getElementById('areaTargetBox').innerHTML='';
+    document.getElementById('areaFormatNote').style.display='none';
+    document.getElementById('alamatList').innerHTML='<div class="alamat-empty">'+msg+'</div>';
+    document.getElementById('heatmapRow').innerHTML='';
     if(kabupatenChart){kabupatenChart.destroy();kabupatenChart=null;}
-    document.getElementById('catatanList').innerHTML='<div class="alamat-empty">Tidak ada data untuk periode ini.</div>';
-    document.getElementById('checklistGapList').innerHTML='<div class="alamat-empty">Tidak ada data untuk periode ini.</div>';
+    if(chatChart){chatChart.destroy();chatChart=null;}
+    if(problemChart){problemChart.destroy();problemChart=null;}
     return;
   }
   const sum=(k)=>rows.reduce((a,r)=>a+r[k],0);
-  const totalLead=sum('lead'), totalChat=sum('chat'), totalJwb=sum('jwb'),
-        totalBm=sum('bm'), totalFur=sum('fur'), totalFut=sum('fut');
+  const totalLead=sum('lead'), totalBm=sum('bm'), totalFut=sum('fut');
   const bmRate=totalLead>0?(totalBm/totalLead*100):0;
   const chkAvg=rows.reduce((a,r)=>a+r.chk,0)/rows.length;
-  const chatAvg=totalChat/rows.length;
-
-  // ---- Arsip / Beli / Follow Up (dari Database TDK, kolom Status & Label Jadi Beli) ----
   const tdkArr=tdk||[];
-  const arsipCount=tdkArr.filter(r=>r.status.toLowerCase()==='arsip').length;
-  const beliCount=tdkArr.filter(r=>r.label==='BELI').length;
-  const fuStatuses=['follow up 1','follow up 2','follow up 3'];
-  const fuCount=tdkArr.filter(r=>fuStatuses.includes(r.status.toLowerCase())).length;
 
-  document.getElementById('k-lead').textContent=totalLead;
-  document.getElementById('k-arsip').textContent=arsipCount;
-  document.getElementById('k-beli').textContent=beliCount;
-  document.getElementById('k-fu').textContent=fuCount;
-
-  document.getElementById('k-chkcard').textContent=chkAvg.toFixed(0)+'%';
-  document.getElementById('k-chkcard-sub').textContent='rata-rata dari '+rows.length+' hari periode ini';
-  setBadge('k-chkcard-badge',chkAvg>=90?['Baik','ok']:chkAvg>=70?['Perlu Perhatian','warn']:['Rendah','bad']);
-
-  document.getElementById('k-fur').textContent=totalFur;
-  document.getElementById('k-chat-total').textContent=totalChat;
-  document.getElementById('k-chat-avg').textContent=Math.round(chatAvg);
+  // ---- Traffic periode terpilih = Chat New Leads (V) + Chat Existing Leads (Y) + Leads Offline (AD)
+  const tRows=rows.filter(r=>r.hasTraffic);
+  const pv=tRows.reduce((a,r)=>a+(r.v||0),0), py=tRows.reduce((a,r)=>a+(r.y||0),0), pad=tRows.reduce((a,r)=>a+(r.ad||0),0);
+  const totalTraffic=pv+py+pad;
+  const trafficAvg=tRows.length?totalTraffic/tRows.length:0;
+  document.getElementById('k-chat-total').textContent=tRows.length?fmt(totalTraffic):'—';
+  document.getElementById('k-chat-avg').textContent=tRows.length?fmt(Math.round(trafficAvg)):'—';
   document.getElementById('k-chk-avg').textContent=chkAvg.toFixed(0)+'%';
+
+  // Breakdown Traffic
+  const parts=[
+    {name:'Chat New Leads',col:'V',val:pv,color:'#F5C400'},
+    {name:'Chat Existing Leads',col:'Y',val:py,color:'#4F46E5'},
+    {name:'Leads Offline',col:'AD',val:pad,color:'#10B981'}
+  ];
+  if(totalTraffic>0){
+    document.getElementById('bdBar').innerHTML=parts.map(p=>
+      `<div style="width:${(p.val/totalTraffic*100).toFixed(2)}%;background:${p.color}" title="${p.name}: ${p.val}"></div>`).join('');
+  } else document.getElementById('bdBar').innerHTML='';
+  document.getElementById('bdGrid').innerHTML=parts.map(p=>`
+    <div class="bd-box" style="border-left-color:${p.color}">
+      <div class="area-stat-lbl">${p.name} <span style="opacity:.6">(kolom ${p.col})</span></div>
+      <div class="area-stat-val">${tRows.length?fmt(p.val):'—'}</div>
+      <div class="area-stat-sub">${totalTraffic>0?(p.val/totalTraffic*100).toFixed(1)+'% dari Traffic':'—'}</div>
+    </div>`).join('');
+
+  const notesT=[];
+  if(!tRows.length){
+    const f=summaryRows.find(r=>r.hasTraffic);
+    notesT.push('Belum ada data Traffic pada periode ini.'+(f?` Kolom V/Y/AD di sheet baru terisi sejak <b>${dlabel(f.date)}</b>.`:''));
+  } else {
+    const noOff=tRows.filter(r=>r.ad===null).length;
+    if(noOff>0) notesT.push(`<b>${noOff}</b> dari ${tRows.length} hari belum punya data Leads Offline (kolom AD kosong) — Leads Offline dan Traffic di periode ini kemungkinan terhitung kurang.`);
+    if(tRows.length<rows.length) notesT.push(`Hanya ${tRows.length} dari ${rows.length} hari rekap yang punya data Traffic; sisanya (kolom V/Y/AD kosong) tidak ikut dihitung, termasuk di rata-rata/hari.`);
+  }
+  const dupCount={}; rows.forEach(r=>{dupCount[r.key]=(dupCount[r.key]||0)+1});
+  const dupDates=Object.keys(dupCount).filter(k=>dupCount[k]>1);
+  if(dupDates.length) notesT.push(`${dupDates.length} tanggal punya lebih dari 1 baris rekap (${dupDates.join(', ')}) — angka bisa terhitung dobel, cek sheet.`);
+  const tn=document.getElementById('trafficNote');
+  tn.style.display=notesT.length?'block':'none';
+  tn.innerHTML=notesT.length?'ℹ️ '+notesT.join('<br>ℹ️ '):'';
+
 
   // FU Tukang alert
   const tEl=document.getElementById('alertTukang');
@@ -918,87 +1008,19 @@ function render(rows,notes,tdk,activities){
     return c.kw.some(k=>t.includes(k));
   }).length);
 
-  // Checklist yang Sering Terlewat — dari Log Aktivitas: Aktivitas + Status
-  const gapEl=document.getElementById('checklistGapList');
-  const actArr=activities||[];
-  const gapMap={}; // { 'Nama Tugas': {belum:0, kendala:0} }
-  actArr.forEach(a=>{
-    if(a.status!=='BELUM' && a.status!=='KENDALA') return; // SELESAI diabaikan
-    if(!gapMap[a.aktivitas]) gapMap[a.aktivitas]={belum:0,kendala:0};
-    if(a.status==='BELUM') gapMap[a.aktivitas].belum++;
-    else gapMap[a.aktivitas].kendala++;
-  });
-  const gapSorted=Object.keys(gapMap).map(k=>({
-    nama:k, belum:gapMap[k].belum, kendala:gapMap[k].kendala,
-    total:gapMap[k].belum+gapMap[k].kendala
-  })).sort((a,b)=>b.total-a.total);
-  if(gapSorted.length===0){
-    gapEl.innerHTML='<div class="alamat-empty">✅ Semua checklist tercatat SELESAI pada periode ini — gak ada yang bolong.</div>';
-  }else{
-    const maxTotal=gapSorted[0].total;
-    gapEl.innerHTML=gapSorted.map(g=>{
-      const belumPct=(g.belum/maxTotal*100).toFixed(0);
-      const kendalaPct=(g.kendala/maxTotal*100).toFixed(0);
-      return `<div class="gap-row">
-        <div class="gap-name">${escHtml(g.nama)}</div>
-        <div class="gap-bar-wrap">
-          <div class="gap-bar-belum" style="width:${belumPct}%"></div>
-          <div class="gap-bar-kendala" style="width:${kendalaPct}%"></div>
-        </div>
-        <div class="gap-legend">
-          <span><span class="gap-dot" style="background:#DC2626"></span>Belum: <b>${g.belum}x</b></span>
-          <span><span class="gap-dot" style="background:#D97706"></span>Kendala: <b>${g.kendala}x</b></span>
-        </div>
-      </div>`;
-    }).join('');
-  }
-
-  // Catatan Harian mentah (Kolom H), terbaru duluan
-  const catatanEl=document.getElementById('catatanList');
-  const notesSorted=[...notes].sort((a,b)=>b.date-a.date);
-  if(notesSorted.length===0){
-    catatanEl.innerHTML='<div class="alamat-empty">Tidak ada catatan pada periode ini.</div>';
-  }else{
-    catatanEl.innerHTML=notesSorted.map(n=>`
-      <div class="catatan-row">
-        <div class="catatan-date">${dlabel(n.date)}</div>
-        <div class="catatan-text">${escHtml(n.note)}</div>
-      </div>`).join('');
-  }
-
-  // Catatan Umum — rangkuman otomatis
-  const sorted=cats.map((c,i)=>({label:c.label,count:counts[i]})).filter(c=>c.count>0).sort((a,b)=>b.count-a.count);
-  const topCats=sorted.slice(0,3).map(c=>c.label).join(', ')||'tidak ada catatan masalah spesifik';
-  const lowChkDays=rows.filter(r=>r.chk<100);
-  const dupCheck={}; rows.forEach(r=>{dupCheck[r.key]=(dupCheck[r.key]||0)+1});
-  const dupDates=Object.keys(dupCheck).filter(k=>dupCheck[k]>1);
-
-  let para=`Selama periode ${dlabel(rows[0].date)}–${dlabel(rows[rows.length-1].date)}, masalah yang paling sering disebut di catatan harian adalah <b>${topCats}</b>. `;
-  para+= totalFut===0
-    ? `Tidak ada satupun follow-up tukang yang tercatat pada periode ini — channel akuisisi prioritas utama perlu ditelusuri. `
-    : `Follow-up tukang tercatat ${totalFut} aktivitas pada periode ini. `;
-  para+= lowChkDays.length>0
-    ? `Ada ${lowChkDays.length} hari dengan checklist tugas belum 100% selesai (${lowChkDays.map(r=>r.label).join(', ')}). `
-    : `Checklist tugas harian selesai 100% di seluruh hari pada periode ini. `;
-  para+= dupDates.length>0
-    ? `Terdeteksi ${dupDates.length} tanggal dengan lebih dari satu entry rekap (kemungkinan input ganda) — perlu dicek manual.`
-    : `Tidak terdeteksi entry ganda pada periode ini.`;
-  document.getElementById('catatanUmum').innerHTML=para;
-
-  buildCharts(rows,cats.map(c=>c.label),counts);
+  buildCharts(chartRows,cats.map(c=>c.label),counts);
 
   // Simpen semua data yang udah kehitung buat dipakai fitur Download —
   // biar gak perlu ngitung ulang dari nol (dan resiko hasilnya beda
   // dari yang keliatan di layar).
   EXPORT_DATA = {
     periodLabel: document.getElementById('periodMeta').textContent,
-    kpi: { totalLead, arsipCount, beliCount, fuCount, totalBm, bmRate, totalFur, totalFut, totalChat, chatAvg, chkAvg },
+    period: { traffic: tRows.length?totalTraffic:null, avg: tRows.length?trafficAvg:null, v:pv, y:py, ad:pad,
+              totalLead, totalBm, bmRate, totalFut, chkAvg },
     kabupaten: kabupatenSorted,
-    checklistGap: gapSorted,
-    catatanHarian: notesSorted,
-    catatanUmum: para,
   };
 }
+
 
 function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
@@ -1033,28 +1055,37 @@ function linearTrend(values){
   const intercept=(sumY-slope*sumX)/n;
   return xs.map(x=>slope*x+intercept);
 }
-function buildCharts(rows,catLabels,catCounts){
+function trendNullable(values){
+  // regresi linear hanya dari titik yang punya data; titik kosong tetap kosong
+  const pts=[]; values.forEach((v,i)=>{ if(v!==null&&v!==undefined) pts.push([i,v]); });
+  if(pts.length<2) return values.map(()=>null);
+  const n=pts.length, sx=pts.reduce((a,p)=>a+p[0],0), sy=pts.reduce((a,p)=>a+p[1],0);
+  const sxy=pts.reduce((a,p)=>a+p[0]*p[1],0), sxx=pts.reduce((a,p)=>a+p[0]*p[0],0);
+  const den=n*sxx-sx*sx; const slope=den===0?0:(n*sxy-sx*sy)/den; const icpt=(sy-slope*sx)/n;
+  return values.map((v,i)=>(v===null||v===undefined)?null:slope*i+icpt);
+}
+function buildCharts(chartRows,catLabels,catCounts){
   const c=chartColors();
-  if(chatChart)chatChart.destroy();
-  if(problemChart)problemChart.destroy();
+  if(chatChart){chatChart.destroy();chatChart=null;}
+  if(problemChart){problemChart.destroy();problemChart=null;}
 
-  const chatValues=rows.map(r=>r.chat);
-  const trend=linearTrend(chatValues);
+  const trafficValues=chartRows.map(r=>r.hasTraffic?r.traffic:null);
+  const trend=trendNullable(trafficValues);
   const dark=document.body.classList.contains('dark');
   const trendColor=dark?'#F5F3EF':'#211F1D';
 
   chatChart=new Chart(document.getElementById('chatChart'),{
     type:'line',
-    data:{labels:rows.map(r=>r.label),datasets:[
-      {label:'Chat Masuk',data:chatValues,
+    data:{labels:chartRows.map(r=>r.label),datasets:[
+      {label:'Traffic',data:trafficValues,spanGaps:false,
         borderColor:c.line,backgroundColor:c.fill,borderWidth:2.5,pointRadius:4,pointBackgroundColor:c.line,tension:.35,fill:true},
-      {label:'Tren',data:trend,
+      {label:'Tren',data:trend,spanGaps:false,
         borderColor:trendColor,backgroundColor:'transparent',borderWidth:2,borderDash:[6,4],pointRadius:0,tension:0,fill:false}
     ]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:true,position:'top',align:'end',
         labels:{boxWidth:14,font:{size:10.5,family:'Poppins'},color:c.text}}},
       scales:{x:{grid:{display:false},ticks:{font:{size:10.5,family:'Poppins'},color:c.text}},
-              y:{grid:{color:c.grid},ticks:{font:{size:10.5,family:'Poppins'},color:c.text}}}}
+              y:{beginAtZero:true,grid:{color:c.grid},ticks:{font:{size:10.5,family:'Poppins'},color:c.text}}}}
   });
 
   problemChart=new Chart(document.getElementById('problemChart'),{
