@@ -362,8 +362,9 @@ select:focus,input[type=date]:focus{border-color:var(--y);box-shadow:0 0 0 3px r
           </div>
           <div class="card">
             <div class="card-title">Kategori Leads Bermasalah</div>
-            <div class="card-desc">Frekuensi disebut di catatan harian, periode terpilih</div>
-            <div class="chart-box h200"><canvas id="problemChart"></canvas></div>
+            <div class="card-desc">Diluar Area &amp; Diluar Produk = jumlah leads (kolom T &amp; U rekap harian). Lainnya = berapa kali disebut di catatan harian. Periode terpilih.</div>
+            <div class="chart-box" style="height:250px"><canvas id="problemChart"></canvas></div>
+            <div class="area-format-note" id="problemNote" style="display:none;margin:12px 0 0"></div>
           </div>
         </div>
       </div>
@@ -517,6 +518,8 @@ function downloadCSV(){
   lines.push(q('  Leads Offline (AD)')+','+p.ad);
   lines.push(q('Total Leads Baru')+','+p.totalLead);
   lines.push(q('Leads Bermasalah')+','+p.totalBm+' ('+p.bmRate.toFixed(1)+'%)');
+  lines.push(q('Diluar Area (jumlah leads)')+','+p.luarArea);
+  lines.push(q('Diluar Produk (jumlah leads)')+','+p.luarProduk);
   lines.push(q('FU Tukang')+','+p.totalFut);
   lines.push(q('Kepatuhan Checklist (Rata-rata)')+','+p.chkAvg.toFixed(0)+'%');
   lines.push('');
@@ -582,12 +585,26 @@ async function loadData(manual){
     // Traffic = V + Y + AD. Dicari lewat nama header; kalau header gak kebaca, pakai posisi kolom tetap.
     const iV=pick('chat new leads',21), iY=pick('chat existing leads',24), iAD=pick('leads offline',29);
     const nn=(x)=>{ if(x===undefined||x===null) return null; const s=String(x).trim(); if(s===''||s==='-') return null; return num(s); };
+    // Diluar Area (T) & Diluar Produk (U): isinya teks "Nama=Jumlah, Nama2=Jumlah2".
+    // Yang diambil cuma ANGKA setelah tanda "=". Nama boleh mengandung koma
+    // (mis. "RELING, TENGKI=2" = 1 entri, jumlah 2), jadi pemisahnya bukan
+    // koma biasa, tapi pola "teks=angka".
+    const iT=pick('diluar area',19), iU=pick('diluar produk',20);
+    const sumEntries=(x)=>{
+      const s=String(x===undefined||x===null?'':x).trim();
+      if(!s||s==='-') return {sum:0,rest:''};
+      let sum=0;
+      const rest=s.replace(/([^=]+?)=\s*(\d+)\s*(?:,|$)/g,(m,nm,c)=>{ sum+=parseInt(c,10); return ' '; }).replace(/[\s,]+/g,' ').trim();
+      return {sum,rest};
+    };
     summaryRows=sumRows.slice(1).map(r=>{
       const d=parseDateFlex(r[iDate]);
       if(!d) return null;
       const cv=nn(r[iV]), cy=nn(r[iY]), cad=nn(r[iAD]);
       const hasTraffic=(cv!==null||cy!==null||cad!==null);
+      const eA=sumEntries(r[iT]), eP=sumEntries(r[iU]);
       return{date:d,key:dkey(d),label:dlabel(d),
+        luarArea:eA.sum,luarProduk:eP.sum,luarUnread:(eA.rest?1:0)+(eP.rest?1:0),
         v:cv,y:cy,ad:cad,hasTraffic,traffic:(cv||0)+(cy||0)+(cad||0),
         lead:num(r[iLead]),
         fur:num(r[iFur]),fut:num(r[iFut]),bm:num(r[iBm]),chk:num(r[iChk])};
@@ -793,6 +810,7 @@ function render(rows,notes,tdk,chartRows,single,periodName){
     if(kabupatenChart){kabupatenChart.destroy();kabupatenChart=null;}
     if(chatChart){chatChart.destroy();chatChart=null;}
     if(problemChart){problemChart.destroy();problemChart=null;}
+    document.getElementById('problemNote').style.display='none';
     return;
   }
   const sum=(k)=>rows.reduce((a,r)=>a+r[k],0);
@@ -994,19 +1012,28 @@ function render(rows,notes,tdk,chartRows,single,periodName){
     return `<div class="heat-cell ${cls}"><div class="heat-date">${r.label}</div><div class="heat-pct">${r.chk}%</div></div>`;
   }).join('');
 
-  // Kategori Leads Bermasalah (keyword scan dari catatan)
+  // Kategori Leads Bermasalah
+  // - 5 kategori pertama: keyword scan dari catatan harian (jumlah catatan yang menyebut)
+  // - Diluar Area & Diluar Produk: jumlah ANGKA dari kolom T & U Ringkasan Harian (jumlah leads).
+  //   "Diluar Produk" sebelumnya keyword scan catatan; diganti sumber kolom U supaya tidak dobel.
   const cats=[
     {label:'Lokasi Jauh',kw:['lokasi jauh']},
     {label:'Spam Chat',kw:['spam']},
     {label:'Chat Kosong',kw:['kosong']},
     {label:'No Respon',kw:['no respon']},
     {label:'Pindah Pasang',kw:['pindah pasang']},
-    {label:'Diluar Produk',kw:['diluar produk']},
   ];
   const counts=cats.map(c=>notes.filter(n=>{
     const t=n.note.toLowerCase();
     return c.kw.some(k=>t.includes(k));
   }).length);
+  const luarAreaSum=rows.reduce((a,r)=>a+r.luarArea,0), luarProdukSum=rows.reduce((a,r)=>a+r.luarProduk,0);
+  cats.push({label:'Diluar Area'},{label:'Diluar Produk'});
+  counts.push(luarAreaSum,luarProdukSum);
+  const luarUnread=rows.reduce((a,r)=>a+r.luarUnread,0);
+  const pn=document.getElementById('problemNote');
+  pn.style.display=luarUnread?'block':'none';
+  pn.textContent=luarUnread?`ℹ️ ${luarUnread} isian Diluar Area/Produk di sheet tidak berformat "Nama=Jumlah", jadi tidak ikut dihitung.`:'';
 
   buildCharts(chartRows,cats.map(c=>c.label),counts);
 
@@ -1016,7 +1043,7 @@ function render(rows,notes,tdk,chartRows,single,periodName){
   EXPORT_DATA = {
     periodLabel: document.getElementById('periodMeta').textContent,
     period: { traffic: tRows.length?totalTraffic:null, avg: tRows.length?trafficAvg:null, v:pv, y:py, ad:pad,
-              totalLead, totalBm, bmRate, totalFut, chkAvg },
+              totalLead, totalBm, bmRate, totalFut, chkAvg, luarArea:luarAreaSum, luarProduk:luarProdukSum },
     kabupaten: kabupatenSorted,
   };
 }
