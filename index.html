@@ -160,13 +160,12 @@ select:focus,input[type=date]:focus{border-color:var(--y);box-shadow:0 0 0 3px r
 .alert-card.ok-state .alert-num{color:#5FCB8B}
 .alert-card.ok-state .alert-icon{background:rgba(26,122,70,.15);border-color:rgba(26,122,70,.4)}
 
-.heatmap-row{display:flex;gap:6px;flex-wrap:wrap}
-.heat-cell{flex:1;min-width:58px;text-align:center;border-radius:10px;padding:11px 4px}
-.heat-date{font-size:9.5px;font-weight:600;opacity:.8}
-.heat-pct{font-size:14px;font-weight:700;margin-top:3px}
-.heat-100{background:var(--ok-bg);color:var(--ok)}
-.heat-mid{background:var(--warn-bg);color:var(--warn)}
-.heat-low{background:var(--bad-bg);color:var(--bad)}
+.brg-head{display:flex;align-items:baseline;gap:10px;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.brg-total{font-size:28px;font-weight:800;color:var(--text)}
+.brg-sub{font-size:12px;color:var(--text-dim)}
+.brg-list{max-height:300px;overflow-y:auto}
+.brg-list .alamat-name{flex:2.2;min-width:0;word-break:break-word}
+.brg-list .alamat-bar-wrap{flex:1}
 
 .chart-box{position:relative;width:100%}
 .chart-box.h220{height:220px}
@@ -356,9 +355,13 @@ select:focus,input[type=date]:focus{border-color:var(--y);box-shadow:0 0 0 3px r
       <div class="section">
         <div class="grid-2">
           <div class="card">
-            <div class="card-title">Kepatuhan Checklist Harian</div>
-            <div class="card-desc">10 tugas standar per hari — rata-rata <b id="k-chk-avg" style="color:var(--text)">—</b></div>
-            <div class="heatmap-row" id="heatmapRow"></div>
+            <div class="card-title">Detail Barang Diluar Produk</div>
+            <div class="card-desc">Barang yang dicari customer tapi tidak dijual — diambil dari kolom U rekap harian (format <b>Nama=Jumlah</b>). Periode terpilih.</div>
+            <div class="brg-head">
+              <div class="brg-total" id="brgTotal">—</div>
+              <div class="brg-sub" id="brgSub">unit dicari</div>
+            </div>
+            <div class="brg-list" id="brgList"></div>
           </div>
           <div class="card">
             <div class="card-title">Kategori Leads Bermasalah</div>
@@ -525,7 +528,11 @@ function downloadCSV(){
   lines.push(q('Diluar Area (jumlah leads)')+','+p.luarArea);
   lines.push(q('Diluar Produk (jumlah leads)')+','+p.luarProduk);
   lines.push(q('FU Tukang')+','+p.totalFut);
-  lines.push(q('Kepatuhan Checklist (Rata-rata)')+','+p.chkAvg.toFixed(0)+'%');
+  lines.push('');
+
+  lines.push(q('DETAIL BARANG DILUAR PRODUK'));
+  lines.push(q('Barang')+','+q('Jumlah')+','+q('Jumlah Hari'));
+  (p.barang||[]).forEach(function(b){ lines.push(q(b.name)+','+b.qty+','+b.days); });
   lines.push('');
 
   lines.push(q('SEBARAN LOKASI PER KABUPATEN'));
@@ -595,7 +602,7 @@ async function loadData(manual){
     const pick=(kw,fallback)=>{const i=colIdx(sh,kw);return i>=0?i:fallback;};
     const iDate=colIdx(sh,'tanggal'),
           iLead=colIdx(sh,'leads baru'), iFur=colIdx(sh,'fu review'), iFut=colIdx(sh,'fu tukang'),
-          iBm=colIdx(sh,'leads bermasalah','bermasalah'), iChk=colIdx(sh,'checklist');
+          iBm=colIdx(sh,'leads bermasalah','bermasalah');
     // Traffic = V + Y + AD. Dicari lewat nama header; kalau header gak kebaca, pakai posisi kolom tetap.
     const iV=pick('chat new leads',21), iY=pick('chat existing leads',24), iAD=pick('leads offline',29);
     const nn=(x)=>{ if(x===undefined||x===null) return null; const s=String(x).trim(); if(s===''||s==='-') return null; return num(s); };
@@ -604,12 +611,20 @@ async function loadData(manual){
     // (mis. "RELING, TENGKI=2" = 1 entri, jumlah 2), jadi pemisahnya bukan
     // koma biasa, tapi pola "teks=angka".
     const iT=pick('diluar area',19), iU=pick('diluar produk',20);
+    // Nama entri juga disimpan (items) buat card "Detail Barang Diluar Produk".
+    // Nama disamakan: spasi dirapikan + huruf besar, jadi "Semen" = "SEMEN ".
+    // Isian apa adanya: "RELING, TENGKI=2" tetap 1 barang bernama "RELING, TENGKI".
     const sumEntries=(x)=>{
       const s=String(x===undefined||x===null?'':x).trim();
-      if(!s||s==='-') return {sum:0,rest:''};
-      let sum=0;
-      const rest=s.replace(/([^=]+?)=\s*(\d+)\s*(?:,|$)/g,(m,nm,c)=>{ sum+=parseInt(c,10); return ' '; }).replace(/[\s,]+/g,' ').trim();
-      return {sum,rest};
+      if(!s||s==='-') return {sum:0,rest:'',items:[]};
+      let sum=0; const items=[];
+      const rest=s.replace(/([^=]+?)=\s*(\d+)\s*(?:,|$)/g,(m,nm,c)=>{
+        const q=parseInt(c,10); sum+=q;
+        const name=nm.replace(/^[\s,]+|[\s,]+$/g,'').replace(/\s+/g,' ').toUpperCase();
+        if(q>0 && name) items.push({name,qty:q});
+        return ' ';
+      }).replace(/[\s,]+/g,' ').trim();
+      return {sum,rest,items};
     };
     summaryRows=sumRows.slice(1).map(r=>{
       const d=parseDateFlex(r[iDate]);
@@ -618,10 +633,10 @@ async function loadData(manual){
       const hasTraffic=(cv!==null||cy!==null||cad!==null);
       const eA=sumEntries(r[iT]), eP=sumEntries(r[iU]);
       return{date:d,key:dkey(d),label:dlabel(d),
-        luarArea:eA.sum,luarProduk:eP.sum,luarUnread:(eA.rest?1:0)+(eP.rest?1:0),
+        luarArea:eA.sum,luarProduk:eP.sum,produkItems:eP.items,luarUnread:(eA.rest?1:0)+(eP.rest?1:0),
         v:cv,y:cy,ad:cad,hasTraffic,traffic:(cv||0)+(cy||0)+(cad||0),
         lead:num(r[iLead]),
-        fur:num(r[iFur]),fut:num(r[iFut]),bm:num(r[iBm]),chk:num(r[iChk])};
+        fur:num(r[iFur]),fut:num(r[iFut]),bm:num(r[iBm])};
     }).filter(Boolean).sort((a,b)=>a.date-b.date);
 
     // ---- Catatan harian (hanya dipakai buat hitung "Kategori Leads Bermasalah") ----
@@ -819,7 +834,7 @@ function render(rows,notes,tdk,chartRows,single,periodName){
   const BD=['bdBar','bdGrid'];
   if(!rows.length){
     EXPORT_DATA = null;
-    ['k-chat-total','k-chat-avg','k-chk-avg'].forEach(id=>document.getElementById(id).textContent='—');
+    ['k-chat-total','k-chat-avg'].forEach(id=>document.getElementById(id).textContent='—');
     BD.forEach(id=>document.getElementById(id).innerHTML='');
     const msg = single
       ? `Belum ada rekap harian untuk <b>${periodName}</b>. Rekap CS biasanya masuk sekitar jam 16:00, dan hari Minggu tidak ada rekap.`
@@ -830,7 +845,9 @@ function render(rows,notes,tdk,chartRows,single,periodName){
     document.getElementById('areaTargetBox').innerHTML='';
     document.getElementById('areaFormatNote').style.display='none';
     document.getElementById('alamatList').innerHTML='<div class="alamat-empty">'+msg+'</div>';
-    document.getElementById('heatmapRow').innerHTML='';
+    document.getElementById('brgTotal').textContent='—';
+    document.getElementById('brgSub').textContent='unit dicari';
+    document.getElementById('brgList').innerHTML='<div class="alamat-empty">'+msg+'</div>';
     if(kabupatenChart){kabupatenChart.destroy();kabupatenChart=null;}
     if(chatChart){chatChart.destroy();chatChart=null;}
     if(problemChart){problemChart.destroy();problemChart=null;}
@@ -840,7 +857,6 @@ function render(rows,notes,tdk,chartRows,single,periodName){
   const sum=(k)=>rows.reduce((a,r)=>a+r[k],0);
   const totalLead=sum('lead'), totalBm=sum('bm'), totalFut=sum('fut');
   const bmRate=totalLead>0?(totalBm/totalLead*100):0;
-  const chkAvg=rows.reduce((a,r)=>a+r.chk,0)/rows.length;
   const tdkArr=tdk||[];
 
   // ---- Traffic periode terpilih = Chat New Leads (V) + Chat Existing Leads (Y) + Leads Offline (AD)
@@ -850,7 +866,6 @@ function render(rows,notes,tdk,chartRows,single,periodName){
   const trafficAvg=tRows.length?totalTraffic/tRows.length:0;
   document.getElementById('k-chat-total').textContent=tRows.length?fmt(totalTraffic):'—';
   document.getElementById('k-chat-avg').textContent=tRows.length?fmt(Math.round(trafficAvg)):'—';
-  document.getElementById('k-chk-avg').textContent=chkAvg.toFixed(0)+'%';
 
   // Breakdown Traffic
   const parts=[
@@ -1030,11 +1045,28 @@ function render(rows,notes,tdk,chartRows,single,periodName){
     });
   }
 
-  // Heatmap
-  document.getElementById('heatmapRow').innerHTML=rows.map(r=>{
-    const cls=r.chk===100?'heat-100':(r.chk>=60?'heat-mid':'heat-low');
-    return `<div class="heat-cell ${cls}"><div class="heat-date">${r.label}</div><div class="heat-pct">${r.chk}%</div></div>`;
-  }).join('');
+  // Detail Barang Diluar Produk (kolom U) — total harus sama dengan bar "Diluar Produk" di Kategori
+  const brgMap={};
+  rows.forEach(r=>(r.produkItems||[]).forEach(it=>{
+    const o=brgMap[it.name]||(brgMap[it.name]={name:it.name,qty:0,days:new Set()});
+    o.qty+=it.qty; o.days.add(r.key);
+  }));
+  const brg=Object.values(brgMap).sort((a,b)=>b.qty-a.qty||a.name.localeCompare(b.name,'id'));
+  const brgTotal=brg.reduce((a,b)=>a+b.qty,0);
+  document.getElementById('brgTotal').textContent=fmt(brgTotal);
+  document.getElementById('brgSub').textContent=brg.length
+    ? `unit dicari · ${fmt(brg.length)} jenis barang`
+    : 'unit dicari';
+  document.getElementById('brgList').innerHTML=brg.length
+    ? brg.map((b,i)=>`
+      <div class="alamat-row">
+        <div class="rank-badge">${i+1}</div>
+        <div class="alamat-name">${escHtml(b.name)}<div style="font-size:10px;color:var(--text-faint)">${b.days.size} hari</div></div>
+        <div class="alamat-bar-wrap"><div class="alamat-bar" style="width:${(b.qty/brg[0].qty*100).toFixed(0)}%"></div></div>
+        <div class="alamat-count">${fmt(b.qty)}</div>
+        <div class="alamat-pct-tag">${(b.qty/brgTotal*100).toFixed(0)}%</div>
+      </div>`).join('')
+    : '<div class="alamat-empty">Belum ada barang diluar produk tercatat di periode ini (kolom U kosong, atau tidak berformat Nama=Jumlah).</div>';
 
   // Kategori Leads Bermasalah
   // - 5 kategori pertama: keyword scan dari catatan harian (jumlah catatan yang menyebut)
@@ -1067,7 +1099,7 @@ function render(rows,notes,tdk,chartRows,single,periodName){
   EXPORT_DATA = {
     periodLabel: document.getElementById('periodMeta').textContent,
     period: { traffic: tRows.length?totalTraffic:null, avg: tRows.length?trafficAvg:null, v:pv, y:py, ad:pad,
-              totalLead, totalBm, bmRate, totalFut, chkAvg, luarArea:luarAreaSum, luarProduk:luarProdukSum },
+              totalLead, totalBm, bmRate, totalFut, luarArea:luarAreaSum, luarProduk:luarProdukSum, barang:brg.map(b=>({name:b.name,qty:b.qty,days:b.days.size})) },
     kabupaten: kabupatenSorted,
   };
 }
